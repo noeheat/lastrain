@@ -29,13 +29,14 @@
 - 배포 전 `pnpm build`와 타입 체크가 통과해야 한다.
 
 ## 프로젝트 구조
-이 프로젝트는 "로그인·DB 없음" 요구로 기본 스택 대신 바닐라 HTML/CSS/JS(빌드 없음) 정적 PWA다.
-- `index.html` / `styles.css`: 입력 폼과 카운트다운 화면 한 페이지, 모바일 우선
-- `app.js`: 화면 전환, 1초 렌더 루프, localStorage(`lastTrain.v1`), `?now=HH:MM` 디버그 시각
-- `time.js`: 순수 시간 로직 — 운행일 경계 04:00, 출발 = 막차 − 도보 − 5분, 색 단계
-- `sw.js` / `manifest.webmanifest` / `icons/`: PWA(오프라인 캐시, 홈 화면 추가)
-- `tests/`: `npm test`(Node) 또는 `tests/run.html`(브라우저)로 같은 테스트 실행
-- `serve.js`: 의존성 없는 개발 서버 (`npm run serve`)
+v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·DB 없음(Supabase 미사용).
+- `app/`: `page.tsx`(화면), `layout.tsx`, `manifest.ts`(PWA), 이후 `api/`(카카오·TAGO 키를 숨기는 서버 라우트)
+- `components/`: `LastTrainApp`(화면 전환·localStorage `lastTrain.v1`·`?now=HH:MM` 디버그), `SetupForm`, `Countdown`, `ServiceWorker`
+- `lib/time.ts`: 순수 시간 로직 — 운행일 경계 04:00, 출발 = 막차 − 도보 − 5분, 색 단계
+- `lib/schema.ts`: zod 입력 검증 (클라이언트·서버 공용)
+- `public/sw.js`, `public/icons/`: 오프라인 캐시(`/_next/static` 캐시 우선, 페이지 네트워크 우선, `/api` 제외)
+- `tests/`: vitest (`pnpm test`)
+- `spike/`: 외부 API 검증 스크립트(TMAP·TAGO·카카오). `node --env-file=.env.local spike/...`로 실행
 
 ## 프로젝트 기록
 - 서비스명:

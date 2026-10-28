@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0f1420;
+  --surface: #1a2131;
+  --text: #eef1f7;
+  --muted: #8e98ad;
+  --border: #2b3448;
+  --accent: #5fb3ff;
+  --error: #ff6b6b;
+  color-scheme: dark;
+}
+
+/* 카운트다운 단계별 색 (body[data-level]은 클라이언트에서 설정) */
+body[data-level="calm"]   { --state: #5fd3a0; --state-bg: #0f1a1a; }
+body[data-level="warn"]   { --state: #ffc24b; --state-bg: #1f1a0e; }
+body[data-level="urgent"] { --state: #ff5d5d; --state-bg: #261012; }
+body[data-level="go"]     { --state: #ffffff; --state-bg: #c62828; }
+body[data-level="missed"] { --state: #8e98ad; --state-bg: #14171f; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.counting {
+  background: var(--state-bg);
+  transition: background-color 0.6s ease;
+}
+
+@keyframes blink { to { visibility: hidden; } }
+body[data-level="go"] .clock { animation: blink 1s steps(2, start) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  body[data-level="go"] .clock { animation: none; }
+}

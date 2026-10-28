@@ -1,10 +1,10 @@
-import { test } from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
   parseHHMM, serviceDay, trainTime, departTime, levelFor, computePlan, formatRemaining,
-} from '../time.js';
+} from '../lib/time';
 
-const at = (d, h, m, s = 0) => new Date(2026, 9, d, h, m, s); // 2026-10-d
+const at = (d: number, h: number, m: number, s = 0) => new Date(2026, 9, d, h, m, s); // 2026-10-d
 const MIN = 60_000;
 
 test('parseHHMM', () => {
@@ -32,7 +32,7 @@ test('00:10에 23:50 막차 → 전날 23:50, 놓침', () => {
   const now = at(29, 0, 10);
   assert.deepEqual(trainTime('23:50', now), at(28, 23, 50));
   const plan = computePlan([{ name: 'A', station: 'x', train: '23:50', walk: 5 }], now);
-  assert.equal(plan.rows[0].missed, true);
+  assert.equal(plan.rows[0]?.missed, true);
   assert.equal(plan.level, 'missed');
 });
 
@@ -42,7 +42,7 @@ test('03:59와 04:00의 23:30 막차', () => {
 });
 
 test('출발 시각이 자정을 거꾸로 넘는 경우', () => {
-  const train = trainTime('00:10', at(28, 22, 0));
+  const train = trainTime('00:10', at(28, 22, 0))!;
   assert.deepEqual(departTime(train, 20), at(28, 23, 45));
 });
 
@@ -65,14 +65,14 @@ test('더 이른 출발이 기준, 놓친 사람은 제외', () => {
   assert.equal(plan.level, 'warn'); // 25분 남음
 
   const later = computePlan(plan.rows, at(28, 23, 55)); // B 막차 지남
-  assert.equal(later.rows[1].missed, true);
+  assert.equal(later.rows[1]?.missed, true);
   assert.equal(later.lead, 0);
 });
 
 test('출발 시각 지났지만 막차 전 → go', () => {
   const plan = computePlan([{ name: 'A', station: 'a', train: '00:30', walk: 10 }], at(29, 0, 20));
   assert.equal(plan.level, 'go');
-  assert.equal(plan.rows[0].missed, false);
+  assert.equal(plan.rows[0]?.missed, false);
 });
 
 test('formatRemaining', () => {

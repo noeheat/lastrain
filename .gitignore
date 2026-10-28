@@ -5,3 +5,9 @@ node_modules/
 # 비밀 키
 .env*
 !.env.example
+
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo
+.vercel
