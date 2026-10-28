@@ -31,7 +31,8 @@ async function search(min, [sx, sy, ex, ey]) {
   const res = await fetch('https://apis.openapi.sk.com/transit/routes', {
     method: 'POST',
     headers: { accept: 'application/json', 'content-type': 'application/json', appKey: KEY },
-    body: JSON.stringify({ startX: sx, startY: sy, endX: ex, endY: ey, count: 10, lang: 0, format: 'json', searchDttm: dttm(min) }),
+    // SPIKE_RAW_DTTM: 변환 없이 그대로 보냄 (예: 202610282430 — 24시 이상 표기 실험용)
+    body: JSON.stringify({ startX: sx, startY: sy, endX: ex, endY: ey, count: 10, lang: 0, format: 'json', searchDttm: process.env.SPIKE_RAW_DTTM ?? dttm(min) }),
   });
   const body = await res.json().catch(() => null);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${JSON.stringify(body)}`);
