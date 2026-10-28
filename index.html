@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1420">
+  <meta name="description" content="두 사람의 막차 출발 시각까지 카운트다운">
+  <title>막차 카운트다운</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="막차">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body data-level="calm">
+  <main>
+    <section id="setup" hidden>
+      <h1>막차 카운트다운</h1>
+      <p class="hint">각자 출발 시각 = 막차 − 도보 − 5분</p>
+      <form id="form" novalidate>
+        <fieldset>
+          <legend>첫 번째 사람</legend>
+          <label>이름 <input name="name0" autocomplete="off" required maxlength="20"></label>
+          <label>출발역 <input name="station0" autocomplete="off" required maxlength="30"></label>
+          <div class="row">
+            <label>막차 시각 <input name="train0" type="time" required></label>
+            <label>역까지 도보(분) <input name="walk0" type="number" inputmode="numeric" min="0" max="180" required></label>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>두 번째 사람</legend>
+          <label>이름 <input name="name1" autocomplete="off" required maxlength="20"></label>
+          <label>출발역 <input name="station1" autocomplete="off" required maxlength="30"></label>
+          <div class="row">
+            <label>막차 시각 <input name="train1" type="time" required></label>
+            <label>역까지 도보(분) <input name="walk1" type="number" inputmode="numeric" min="0" max="180" required></label>
+          </div>
+        </fieldset>
+        <p id="error" class="error" role="alert"></p>
+        <button type="submit">카운트다운 시작</button>
+      </form>
+    </section>
+
+    <section id="countdown" hidden>
+      <p class="label" id="leadLabel"></p>
+      <p class="clock" id="clock" aria-live="off">--:--</p>
+      <p class="sub" id="leadSub"></p>
+      <ul id="people"></ul>
+      <button id="edit" class="ghost" type="button">수정</button>
+    </section>
+  </main>
+</body>
+</html>

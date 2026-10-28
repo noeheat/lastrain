@@ -1,0 +1,156 @@
+:root {
+  --bg: #0f1420;
+  --surface: #1a2131;
+  --text: #eef1f7;
+  --muted: #8e98ad;
+  --border: #2b3448;
+  --accent: #5fb3ff;
+  --error: #ff6b6b;
+  color-scheme: dark;
+}
+
+/* 카운트다운 단계별 색 */
+body[data-level="calm"]   { --state: #5fd3a0; --state-bg: #0f1a1a; }
+body[data-level="warn"]   { --state: #ffc24b; --state-bg: #1f1a0e; }
+body[data-level="urgent"] { --state: #ff5d5d; --state-bg: #261012; }
+body[data-level="go"]     { --state: #ffffff; --state-bg: #c62828; }
+body[data-level="missed"] { --state: #8e98ad; --state-bg: #14171f; }
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.counting {
+  background: var(--state-bg);
+  transition: background-color 0.6s ease;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  min-height: 100%;
+}
+
+h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+.hint { color: var(--muted); margin: 0 0 20px; font-size: 0.9rem; }
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 12px 14px 4px;
+  margin: 0 0 16px;
+}
+legend { padding: 0 6px; color: var(--muted); font-size: 0.85rem; }
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  font: inherit;
+  font-size: 1.05rem; /* 16px 이상: iOS 확대 방지 */
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 48px;
+}
+input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+input[aria-invalid="true"] { border-color: var(--error); }
+
+button {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #06121f;
+  cursor: pointer;
+}
+button.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  margin-top: 28px;
+}
+body[data-level="go"] button.ghost { color: #fff; border-color: rgba(255, 255, 255, 0.5); }
+
+.error { color: var(--error); min-height: 1.2em; margin: 0 0 12px; font-size: 0.9rem; }
+
+/* 카운트다운 화면 */
+#countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 8vh;
+}
+#countdown[hidden] { display: none; }
+
+.label { margin: 0; font-size: 1.1rem; color: var(--state); opacity: 0.9; }
+.clock {
+  margin: 8px 0;
+  font-size: clamp(4rem, 24vw, 9rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--state);
+  transition: color 0.6s ease;
+}
+.clock.text { font-size: clamp(3rem, 16vw, 6rem); }
+body[data-level="go"] .clock { animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  body[data-level="go"] .clock { animation: none; }
+}
+
+.sub { margin: 0 0 32px; color: var(--muted); font-size: 0.95rem; }
+body[data-level="go"] .sub, body[data-level="go"] .label { color: #fff; }
+
+#people {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+#people li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+}
+#people li.lead { border-color: var(--state); }
+#people .who { font-weight: 600; }
+#people .meta { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+#people .left { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+#people li.missed { opacity: 0.55; }
+body[data-level="go"] #people .meta { color: rgba(255, 255, 255, 0.75); }

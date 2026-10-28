@@ -1,0 +1,4 @@
+.DS_Store
+node_modules/
+# 개인 PC 경로가 들어 있는 앱 미리보기 설정
+.claude/
