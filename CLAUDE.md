@@ -46,3 +46,4 @@
 
 ## 교훈 (삽질할 때마다 한 줄씩 추가)
 - DB 서버와 배포 서버는 같은 리전에 둔다. (멀면 요청마다 150ms+ 지연)
+- TMAP 대중교통 API의 searchDttm·service는 자정 이후 운행을 반영하지 못한다(00:00에 전 노선 운행종료, 24시+ 표기는 400). 막차는 TAGO 지하철 시간표(depTime, endSubwayStationNm)로 계산한다.
