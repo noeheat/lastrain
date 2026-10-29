@@ -10,11 +10,12 @@ type Props = {
   picked: StationRef | null;
   invalid?: boolean;
   onText: (text: string) => void; // 타이핑하면 고른 역은 풀린다 (부모가 처리)
-  onPick: (station: StationRef) => void;
+  onPick: (station: StationRef, results: StationRef[]) => void; // results: 같은 검색의 다른 후보들
+  badge?: string; // 고른 뒤 라벨 옆 표시 (기본: 노선 이름)
 };
 
 /** 역 이름을 치면 /api/stations로 검색해 노선별 후보를 보여준다. 검색이 안 돼도 입력한 이름은 그대로 쓸 수 있다. */
-export function StationPicker({ label, text, picked, invalid, onText, onPick }: Props) {
+export function StationPicker({ label, text, picked, invalid, onText, onPick, badge }: Props) {
   const [results, setResults] = useState<StationRef[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   const [searched, setSearched] = useState('');
@@ -53,7 +54,7 @@ export function StationPicker({ label, text, picked, invalid, onText, onPick }: 
     <div className={labelClass}>
       <label>
         {label}
-        {picked && <span className="ml-1.5 text-[var(--accent)]">{picked.line}</span>}
+        {picked && <span className="ml-1.5 text-[var(--accent)]">{badge ?? picked.line}</span>}
         <input
           value={text}
           onChange={(e) => onText(e.target.value)}
@@ -76,7 +77,7 @@ export function StationPicker({ label, text, picked, invalid, onText, onPick }: 
             <li key={s.id} className="border-t border-[var(--border)] first:border-t-0">
               <button
                 type="button"
-                onClick={() => onPick(s)}
+                onClick={() => onPick(s, results)}
                 className="flex min-h-11 w-full items-center justify-between gap-3 bg-[var(--bg)] px-3 text-left text-[1rem] text-[var(--text)]"
               >
                 <span>{s.name}</span>
