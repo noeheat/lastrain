@@ -1,6 +1,7 @@
 // TAGO 지하철정보 API 호출 (서버 전용: 서비스 키를 쓰므로 app/api에서만 import한다)
 
 import type { Dir, RawRow } from './reach';
+import type { StationRef } from './time';
 
 const BASE = 'https://apis.data.go.kr/1613000/SubwayInfo';
 const DAY = 60 * 60 * 24;
@@ -22,9 +23,8 @@ async function get<T>(op: string, params: Record<string, string>): Promise<T[]> 
   return Array.isArray(items) ? items : [items];
 }
 
-export type Station = { id: string; name: string; line: string };
 
-export async function searchStations(keyword: string): Promise<Station[]> {
+export async function searchStations(keyword: string): Promise<StationRef[]> {
   const items = await get<{ subwayStationId?: string; subwayStationName?: string; subwayRouteName?: string }>(
     'GetKwrdFndSubwaySttnList', { subwayStationName: keyword },
   );

@@ -6,11 +6,15 @@ const MIN = 60_000;
 
 export type Level = 'calm' | 'warn' | 'urgent' | 'go' | 'missed';
 
+export type StationRef = { id: string; name: string; line: string };
+
 export type Person = {
   name: string;
   station: string;
   train: string; // "HH:MM"
   walk: number; // 역까지 도보(분)
+  origin?: StationRef;
+  dest?: StationRef;
 };
 
 export type PlanRow = Person & {
