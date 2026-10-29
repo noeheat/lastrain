@@ -13,3 +13,18 @@ export const SavedSchema = z.object({
 });
 
 export type Saved = z.infer<typeof SavedSchema>;
+
+// API 쿼리 검증 (app/api 라우트)
+const StationId = z.string().regex(/^[A-Z0-9-]{4,24}$/, '역 ID 형식이 잘못됐어요');
+
+export const StationQuerySchema = z.object({
+  q: z.string().trim().min(1).max(20),
+});
+
+export const LastTrainQuerySchema = z
+  .object({
+    origin: StationId,
+    dest: StationId,
+    daily: z.enum(['01', '02', '03']),
+  })
+  .refine((v) => v.origin !== v.dest, '출발역과 도착역이 같아요');

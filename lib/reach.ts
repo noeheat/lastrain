@@ -137,3 +137,9 @@ export function findLastTrain(r: RouteInput): { dir: Dir; last: Train } | null {
   }
   return best && { dir: best.dir, last: best.last };
 }
+
+/** /api/last-train 응답 */
+export type LastTrainResult = {
+  last: (Train & { dir: Dir }) | null; // 자동 판정 결과 (판정 불가면 null)
+  candidates: Record<Dir, Train[]>; // 방향별 마지막 몇 대 (직접 고르기용)
+};
