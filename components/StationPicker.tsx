@@ -18,6 +18,7 @@ type Props = {
 export function StationPicker({ label, text, picked, invalid, onText, onPick, badge }: Props) {
   const [results, setResults] = useState<StationRef[]>([]);
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState(''); // 서버가 알려준 원인 (없으면 일반 문구)
   const [searched, setSearched] = useState('');
   const q = text.trim();
 
@@ -33,14 +34,15 @@ export function StationPicker({ label, text, picked, invalid, onText, onPick, ba
       setStatus('loading');
       try {
         const res = await fetch(`/api/stations?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const body = (await res.json()) as { stations: StationRef[] };
-        setResults(body.stations);
+        const body = await res.json().catch(() => null);
+        if (!res.ok || !body) throw new Error(body?.error ?? '');
+        setResults((body as { stations: StationRef[] }).stations);
         setSearched(q);
         setStatus('idle');
-      } catch {
+      } catch (e) {
         if (ctrl.signal.aborted) return;
         setResults([]);
+        setErrorMsg(e instanceof TypeError ? '네트워크에 연결할 수 없어요.' : (e as Error).message);
         setStatus('error');
       }
     }, 300);
@@ -66,7 +68,9 @@ export function StationPicker({ label, text, picked, invalid, onText, onPick, ba
       </label>
       {status === 'loading' && <p className={hintClass}>검색 중…</p>}
       {status === 'error' && (
-        <p className={`${hintClass} text-[var(--error)]`}>역 검색에 실패했어요. 막차 시각을 직접 입력해도 돼요.</p>
+        <p className={`${hintClass} text-[var(--error)]`}>
+          역 검색에 실패했어요{errorMsg ? ` (${errorMsg})` : '.'} 막차 시각을 직접 입력해도 돼요.
+        </p>
       )}
       {status === 'idle' && !picked && q && searched === q && results.length === 0 && (
         <p className={hintClass}>검색 결과가 없어요.</p>
