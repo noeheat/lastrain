@@ -18,11 +18,13 @@ type Props = {
   train: string; // 지금 입력된 막차 시각 (선택 표시용)
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (수정 화면에서 직접 고친 값 보호)
   onChoose: (time: string) => void;
+  manualField: React.ReactNode; // 막차 시각 직접 입력칸 (필요할 때만 보여준다)
 };
 
 /** 출발역→도착역 막차를 /api/last-train에서 받아 자동으로 채우고, 다른 열차도 고를 수 있게 보여준다. */
-export function TrainChoices({ origin, dest, train, autoFill, onChoose }: Props) {
+export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualField }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
+  const [manualOpen, setManualOpen] = useState(false);
   const daily = dailyTypeCode(serviceDay(new Date()));
 
   // onChoose는 렌더마다 새 함수라, 최신 값을 ref로 들고 있다가 응답이 오면 부른다
@@ -34,6 +36,7 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose }: Props)
   useEffect(() => {
     const ctrl = new AbortController();
     setState({ status: 'loading' });
+    setManualOpen(false);
     (async () => {
       try {
         const qs = new URLSearchParams({ origin: origin.id, dest: dest.id, daily });
@@ -53,7 +56,12 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose }: Props)
 
   if (state.status === 'loading') return <p className={`${hintClass} mb-3 text-[var(--muted)]`}>막차 찾는 중…</p>;
   if (state.status === 'error') {
-    return <p className={`${hintClass} mb-3 text-[var(--error)]`}>{state.message} 막차 시각을 직접 입력해 주세요.</p>;
+    return (
+      <>
+        <p className={`${hintClass} mb-3 text-[var(--error)]`}>{state.message} 막차 시각을 직접 입력해 주세요.</p>
+        {manualField}
+      </>
+    );
   }
 
   const { last, candidates } = state.result;
@@ -61,6 +69,8 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose }: Props)
   const list: Train[] = last
     ? [...candidates[last.dir].filter((t) => t.min < last.min).slice(-3), last]
     : [...candidates.U, ...candidates.D].sort((a, b) => a.min - b.min);
+  // 자동 막차가 없거나 지금 값이 목록에 없으면(직접 고친 값, 이전 역의 값) 입력칸을 숨기지 않는다
+  const mustShowManual = !last || !list.some((t) => t.time === train);
 
   return (
     <div className="mb-3">
@@ -82,6 +92,17 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose }: Props)
           </button>
         ))}
       </div>
+      {!mustShowManual && (
+        <button
+          type="button"
+          onClick={() => setManualOpen((open) => !open)}
+          aria-expanded={manualOpen}
+          className="mt-2 min-h-9 text-[0.85rem] text-[var(--muted)] underline"
+        >
+          {manualOpen ? '직접 입력 닫기' : '시각 직접 입력'}
+        </button>
+      )}
+      {(mustShowManual || manualOpen) && <div className="mt-3">{manualField}</div>}
     </div>
   );
 }

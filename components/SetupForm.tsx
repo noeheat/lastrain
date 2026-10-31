@@ -86,6 +86,9 @@ export function SetupForm({ initial, onSubmit }: { initial: Person[] | null; onS
         </div>
         {drafts.map((d, i) => {
           const from = originFor(origin, d);
+          const trainField = (
+            <label className={labelClass}>막차 시각 <input {...field(i, 'train')} type="time" /></label>
+          );
           return (
             <fieldset key={i} className="mb-4 rounded-[14px] border border-[var(--border)] bg-[var(--surface)] px-3.5 pt-3 pb-1">
               <legend className="px-1.5 text-[0.85rem] text-[var(--muted)]">{i === 0 ? '첫 번째 사람' : '두 번째 사람'}</legend>
@@ -104,18 +107,21 @@ export function SetupForm({ initial, onSubmit }: { initial: Person[] | null; onS
                   train={d.train}
                   autoFill={pairKey(origin, d) !== initialPairs[i]}
                   onChoose={(train) => update(i, { train })}
+                  manualField={trainField}
                 />
-              ) : origin.options.length > 0 && d.dest ? (
-                <p className={`${hintClass} mb-3 text-[var(--muted)]`}>
-                  {origin.text}역에는 {d.dest.line}이 없어요. 환승 경로는 아직 계산하지 못해서 막차 시각을 직접 입력해 주세요.
-                </p>
-              ) : null}
-              <div className="grid grid-cols-2 gap-3">
-                <label className={labelClass}>막차 시각 <input {...field(i, 'train')} type="time" /></label>
-                <label className={labelClass}>
-                  역까지 도보(분) <input {...field(i, 'walk')} type="number" inputMode="numeric" min={0} max={180} />
-                </label>
-              </div>
+              ) : (
+                <>
+                  {origin.options.length > 0 && d.dest && (
+                    <p className={`${hintClass} mb-3 text-[var(--muted)]`}>
+                      {origin.text}역에는 {d.dest.line}이 없어요. 환승 경로는 아직 계산하지 못해서 막차 시각을 직접 입력해 주세요.
+                    </p>
+                  )}
+                  {trainField}
+                </>
+              )}
+              <label className={labelClass}>
+                역까지 도보(분) <input {...field(i, 'walk')} type="number" inputMode="numeric" min={0} max={180} />
+              </label>
             </fieldset>
           );
         })}
