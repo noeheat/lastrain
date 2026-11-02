@@ -49,3 +49,4 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - DB 서버와 배포 서버는 같은 리전에 둔다. (멀면 요청마다 150ms+ 지연)
 - TMAP 대중교통 API의 searchDttm·service는 자정 이후 운행을 반영하지 못한다(00:00에 전 노선 운행종료, 24시+ 표기는 400). 막차는 TAGO 지하철 시간표(depTime, endSubwayStationNm)로 계산한다.
 - TAGO 시간표엔 열차 번호가 없어, 출발역·도착역 시간표를 짝지어 "이 열차가 도착역을 지나는지" 판정할 수 없다(배차 3~5분이면 다른 열차와 짝지어지고, 9호선처럼 급행이 섞이면 소요시간 추정도 깨짐). `spike/tago-reach.js` 참고.
+- KRIC 역사별 운행시각표는 열차 번호(trnNo)와 종착역(tmnStinCd)을 주지만, 2호선 토·휴일과 4호선·3호선·1호선 토요일(dayCd 7)은 TAGO처럼 비어 있다(2026-11 확인, 코드표 미확인). `spike/kric-timetable.js` 참고.
