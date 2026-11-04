@@ -5,7 +5,8 @@ import type { Person, StationRef } from '@/lib/time';
 import { PersonSchema } from '@/lib/schema';
 import { StationPicker } from './StationPicker';
 import { TrainChoices } from './TrainChoices';
-import { hintClass, inputClass, labelClass } from './formStyles';
+import { TransferPlan } from './TransferPlan';
+import { inputClass, labelClass } from './formStyles';
 
 // 출발역은 두 사람이 함께 쓴다. 같은 이름의 역도 노선마다 ID가 달라서(강남: 2호선·신분당),
 // 고른 이름의 노선별 역을 모두 들고 있다가 사람마다 도착역 노선에 맞는 역을 쓴다.
@@ -24,7 +25,8 @@ const toOrigin = (people: Person[] | null): Origin => {
   return { text: people?.[0]?.station ?? '', options: [...options.values()] };
 };
 const originFor = (o: Origin, d: Draft) => (d.dest && o.options.find((s) => s.line === d.dest!.line)) || null;
-const pairKey = (o: Origin, d: Draft) => `${originFor(o, d)?.id ?? ''}>${d.dest?.id ?? ''}`;
+// 환승 경로(같은 노선 역이 없음)는 출발역 이름으로 구분한다
+const pairKey = (o: Origin, d: Draft) => `${originFor(o, d)?.id ?? o.text}>${d.dest?.id ?? ''}`;
 
 export function SetupForm({ initial, onSubmit }: { initial: Person[] | null; onSubmit: (people: Person[]) => void }) {
   const [origin, setOrigin] = useState<Origin>(() => toOrigin(initial));
@@ -109,15 +111,17 @@ export function SetupForm({ initial, onSubmit }: { initial: Person[] | null; onS
                   onChoose={(train) => update(i, { train })}
                   manualField={trainField}
                 />
+              ) : origin.options.length > 0 && d.dest ? (
+                <TransferPlan
+                  origin={origin.options[0]!.name}
+                  dest={d.dest.name}
+                  train={d.train}
+                  autoFill={pairKey(origin, d) !== initialPairs[i]}
+                  onChoose={(train) => update(i, { train })}
+                  manualField={trainField}
+                />
               ) : (
-                <>
-                  {origin.options.length > 0 && d.dest && (
-                    <p className={`${hintClass} mb-3 text-[var(--muted)]`}>
-                      {origin.text}역에는 {d.dest.line}이 없어요. 환승 경로는 아직 계산하지 못해서 막차 시각을 직접 입력해 주세요.
-                    </p>
-                  )}
-                  {trainField}
-                </>
+                trainField
               )}
               <label className={labelClass}>
                 역까지 도보(분) <input {...field(i, 'walk')} type="number" inputMode="numeric" min={0} max={180} />

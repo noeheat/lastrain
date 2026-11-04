@@ -138,6 +138,16 @@ export function findLastTrain(r: RouteInput): { dir: Dir; last: Train } | null {
   return best && { dir: best.dir, last: best.last };
 }
 
+/** 환승 구간용: 정거장 수가 적은 방향에서 도착역까지 가는 열차 전부 (시각 순). 판정 불가면 빈 배열 */
+export function reachingTrainList(r: RouteInput): Train[] {
+  let best: { trains: Train[]; stops: number } | null = null;
+  for (const dir of DIRS) {
+    const res = reachingTrains(r, dir);
+    if (res && res.trains.length && (!best || res.stops < best.stops)) best = res;
+  }
+  return best?.trains ?? [];
+}
+
 /** /api/last-train 응답 */
 export type LastTrainResult = {
   last: (Train & { dir: Dir }) | null; // 자동 판정 결과 (판정 불가면 null)

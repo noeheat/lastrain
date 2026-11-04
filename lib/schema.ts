@@ -26,6 +26,14 @@ export const SavedSchema = z.object({
 export type Saved = z.infer<typeof SavedSchema>;
 
 // API 쿼리 검증 (app/api 라우트)
+export const PlanQuerySchema = z
+  .object({
+    origin: z.string().trim().min(1).max(30),
+    dest: z.string().trim().min(1).max(30),
+    daily: z.enum(['01', '02', '03']),
+  })
+  .refine((v) => v.origin !== v.dest, '출발역과 도착역이 같아요');
+
 export const StationQuerySchema = z.object({
   q: z.string().trim().min(1).max(20),
 });

@@ -1,7 +1,8 @@
 // TAGO 지하철정보 API 호출 (서버 전용: 서비스 키를 쓰므로 app/api에서만 import한다)
 
 import { json } from './http';
-import type { Dir, RawRow } from './reach';
+import { reachingTrainList, toTrains, type Dir, type RawRow } from './reach';
+import { nameVariants, normLine, sameStation, type LegTrain } from './transfer';
 import type { StationRef } from './time';
 
 const BASE = 'https://apis.data.go.kr/1613000/SubwayInfo';
@@ -56,4 +57,32 @@ export function tagoFailure(e: unknown): Response {
   return e.retry
     ? json({ error: `${e.message}. 잠시 후 다시 시도해 주세요.` }, 502)
     : json({ error: `${e.message}.` }, 500);
+}
+
+/** 환승 구간용 (1~9호선 밖 노선): 내릴 역까지 가는 열차. 도착 시각은 출발 + 카카오 소요시간으로 추정 */
+export async function tagoLegTrains(
+  from: string, to: string, line: string, daily: string, legMinutes: number,
+): Promise<LegTrain[] | null> {
+  const find = async (name: string) => {
+    for (const n of nameVariants(name)) {
+      const hit = (await searchStations(n)).find((s) => sameStation(s.name, name) && normLine(s.line) === normLine(line));
+      if (hit) return hit.id;
+    }
+    return null;
+  };
+  const [originId, destId] = await Promise.all([find(from), find(to)]);
+  if (!originId || !destId) return null;
+  const [oU, oD, dU, dD] = await Promise.all([
+    timetable(originId, daily, 'U'), timetable(originId, daily, 'D'),
+    timetable(destId, daily, 'U'), timetable(destId, daily, 'D'),
+  ]);
+  const routeId = [...oU, ...oD].find((r) => r.subwayRouteId)?.subwayRouteId;
+  if (!routeId) return null;
+  const ends = (rows: TimetableRow[]) => new Set(rows.flatMap((r) => (r.endSubwayStationId ? [r.endSubwayStationId] : [])));
+  const trains = reachingTrainList({
+    routeId, originId, destId,
+    origin: { U: toTrains(oU, originId), D: toTrains(oD, originId) },
+    destEnds: { U: ends(dU), D: ends(dD) },
+  });
+  return trains.map((t) => ({ dep: t.min, arr: t.min + legMinutes, endName: t.endName, estimated: true }));
 }

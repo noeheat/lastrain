@@ -10,6 +10,7 @@ import type { Dir, LastTrainResult, Train } from './reach';
 /** 시간표 응답 항목 중 쓰는 필드 */
 export type SeoulRow = {
   TRAIN_NO?: string;
+  ARRIVETIME?: string;
   LEFTTIME?: string; // "HH:MM:SS", 자정 이후는 "24:21:30"처럼 24 이상
   DESTSTATION?: string; // 종착역 역코드
   SUBWAYENAME?: string; // 종착역 이름
@@ -53,32 +54,61 @@ export function toSeoulTrains(rows: SeoulRow[], stationCode: string): NumberedTr
   return trains.sort((a, b) => a.min - b.min);
 }
 
-/** 도착역 시간표에 같은 번호가 출발 뒤에 나오는지 (도착역이 종착이면 시각은 보지 않는다) */
-function reaches(t: NumberedTrain, destByNo: Map<string, SeoulRow[]>, destCode: string): boolean {
-  return (destByNo.get(t.no) ?? []).some((r) => {
-    if (r.DESTSTATION === destCode) return true;
-    const min = parseSeoulTime(r.LEFTTIME);
-    return min != null && min > t.min && min - t.min <= MAX_RIDE_MIN;
-  });
+/** 도착 시각은 초가 있으면 올린다 (환승 판정에서 더 늦은 쪽이 안전) */
+function arrivalMin(t: unknown): number | null {
+  const min = parseSeoulTime(t);
+  return min != null && !String(t).endsWith(':00') ? min + 1 : min;
+}
+
+/**
+ * 도착역 시간표에서 같은 번호를 찾아 도착 시각(분)을 돌려준다.
+ * 도착역까지 안 가면 undefined, 가지만 종착역이라 시각을 모르면 null.
+ */
+function arrivalAt(t: NumberedTrain, destByNo: Map<string, SeoulRow[]>, destCode: string): number | null | undefined {
+  let terminus = false;
+  for (const r of destByNo.get(t.no) ?? []) {
+    if (r.DESTSTATION === destCode) {
+      terminus = true; // 종착역 행의 시각은 자리 표시 값
+      continue;
+    }
+    const min = arrivalMin(r.ARRIVETIME) ?? arrivalMin(r.LEFTTIME);
+    if (min != null && min > t.min && min - t.min <= MAX_RIDE_MIN) return min;
+  }
+  return terminus ? null : undefined;
+}
+
+function byNumber(rows: SeoulRow[]) {
+  const map = new Map<string, SeoulRow[]>();
+  for (const r of rows) {
+    if (!r.TRAIN_NO) continue;
+    map.set(r.TRAIN_NO, [...(map.get(r.TRAIN_NO) ?? []), r]);
+  }
+  return map;
+}
+
+/** 도착역까지 가는 열차 (두 방향 합쳐 출발 시각 순). arr는 도착역 도착 시각, 모르면 null */
+export function reachingTrains(input: SeoulInput): (Train & { dir: Dir; arr: number | null })[] {
+  const destByNo = byNumber(input.dest);
+  const out: (Train & { dir: Dir; arr: number | null })[] = [];
+  for (const dir of ['U', 'D'] as const) {
+    for (const { no, ...t } of toSeoulTrains(input.origin[dir], input.originCode)) {
+      const arr = arrivalAt({ no, ...t }, destByNo, input.destCode);
+      if (arr !== undefined) out.push({ ...t, dir, arr });
+    }
+  }
+  return out.sort((a, b) => a.min - b.min);
 }
 
 /** 도착역까지 가는 막차와 방향별 마지막 몇 대 */
 export function findLastTrainByNumber(input: SeoulInput, candidates = 6): LastTrainResult {
-  const destByNo = new Map<string, SeoulRow[]>();
-  for (const r of input.dest) {
-    if (!r.TRAIN_NO) continue;
-    destByNo.set(r.TRAIN_NO, [...(destByNo.get(r.TRAIN_NO) ?? []), r]);
-  }
-
   const trains = {
     U: toSeoulTrains(input.origin.U, input.originCode),
     D: toSeoulTrains(input.origin.D, input.originCode),
   };
-  let last: LastTrainResult['last'] = null;
-  for (const dir of ['U', 'D'] as const) {
-    const t = trains[dir].filter((x) => reaches(x, destByNo, input.destCode)).at(-1);
-    if (t && (!last || t.min > last.min)) last = { time: t.time, min: t.min, endId: t.endId, endName: t.endName, dir };
-  }
+  const lastReach = reachingTrains(input).at(-1);
+  const last: LastTrainResult['last'] = lastReach
+    ? { time: lastReach.time, min: lastReach.min, endId: lastReach.endId, endName: lastReach.endName, dir: lastReach.dir }
+    : null;
   const strip = (list: NumberedTrain[]): Train[] => list.map(({ no: _no, ...t }) => t);
   return {
     last,

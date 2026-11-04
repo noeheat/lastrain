@@ -35,6 +35,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `lib/time.ts`: 순수 시간 로직 — 운행일 경계 04:00, 출발 = 막차 − 도보 − 5분, 색 단계
 - `lib/schema.ts`: zod 입력 검증 (클라이언트·서버 공용)
 - `lib/seoul.ts`·`lib/seoulReach.ts`: 1~9호선 막차 — 서울 열린데이터광장 시간표(토·휴일 포함), 열차 번호로 도착역 통과 판정. 실패하면 TAGO(`lib/tago.ts`·`lib/reach.ts`)로 넘어감
+- `lib/transfer.ts`(순수)·`lib/kakao.ts`·`lib/plan.ts`, `/api/plan`: 환승 막차 — 카카오 지하철 경로를 구간으로 나눠 마지막 구간 막차부터 역산. 화면은 `components/TransferPlan`
 - `public/sw.js`, `public/icons/`: 오프라인 캐시(`/_next/static` 캐시 우선, 페이지 네트워크 우선, `/api` 제외)
 - `tests/`: vitest (`pnpm test`)
 - `spike/`: 외부 API 검증 스크립트(TMAP·TAGO·카카오). `node --env-file=.env.local spike/...`로 실행

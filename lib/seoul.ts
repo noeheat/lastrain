@@ -2,7 +2,8 @@
 // 1~9호선은 토요일·휴일 시간표가 TAGO에 없어서 이쪽을 먼저 쓴다. 실패하면 null을 돌려 TAGO로 넘어간다.
 
 import type { Dir, LastTrainResult } from './reach';
-import { findLastTrainByNumber, type SeoulRow } from './seoulReach';
+import { findLastTrainByNumber, reachingTrains, type SeoulRow } from './seoulReach';
+import { nameVariants, type LegTrain } from './transfer';
 
 const BASE = 'http://openapi.seoul.go.kr:8088';
 const DAY = 60 * 60 * 24;
@@ -27,12 +28,16 @@ async function get<T>(service: string, path: string): Promise<T[]> {
 
 /** 역 이름·노선 → 서울 역코드 (예: 강남, 2호선 → 0222). 못 찾으면 null */
 async function stationCode(name: string, line: string): Promise<string | null> {
-  const rows = await get<{ STATION_CD?: string; STATION_NM?: string; LINE_NUM?: string }>(
-    'SearchInfoBySubwayNameService', encodeURIComponent(name),
-  );
-  // 서울은 "02호선", TAGO는 "2호선"
-  const hit = rows.find((r) => r.STATION_NM === name && r.LINE_NUM?.replace(/^0/, '') === line);
-  return hit?.STATION_CD ?? null;
+  // TAGO·카카오는 "잠실(송파구청)", 서울은 "잠실"처럼 표기가 달라 괄호 앞뒤도 찾아본다
+  for (const n of nameVariants(name)) {
+    const rows = await get<{ STATION_CD?: string; STATION_NM?: string; LINE_NUM?: string }>(
+      'SearchInfoBySubwayNameService', encodeURIComponent(n),
+    );
+    // 서울은 "02호선", TAGO·카카오는 "2호선"
+    const hit = rows.find((r) => r.STATION_NM === n && r.LINE_NUM?.replace(/^0/, '') === line);
+    if (hit?.STATION_CD) return hit.STATION_CD;
+  }
+  return null;
 }
 
 const timetable = (code: string, week: string, dir: Dir) =>
@@ -57,4 +62,22 @@ export async function seoulLastTrain(
   ]);
   if (!oU.length && !oD.length) return null;
   return findLastTrainByNumber({ originCode, destCode, origin: { U: oU, D: oD }, dest: [...dU, ...dD] });
+}
+
+/** 환승 구간용: 내릴 역까지 가는 열차와 도착 시각. 종착역이라 도착 시각을 모르면 출발 + 카카오 소요시간으로 추정 */
+export async function seoulLegTrains(
+  from: string, to: string, line: string, daily: keyof typeof WEEK, legMinutes: number,
+): Promise<LegTrain[] | null> {
+  if (!isSeoulLine(line)) return null;
+  const [originCode, destCode] = await Promise.all([stationCode(from, line), stationCode(to, line)]);
+  if (!originCode || !destCode) return null;
+  const week = WEEK[daily];
+  const [oU, oD, dU, dD] = await Promise.all([
+    timetable(originCode, week, 'U'), timetable(originCode, week, 'D'),
+    timetable(destCode, week, 'U'), timetable(destCode, week, 'D'),
+  ]);
+  if (!oU.length && !oD.length) return null;
+  return reachingTrains({ originCode, destCode, origin: { U: oU, D: oD }, dest: [...dU, ...dD] }).map((t) => ({
+    dep: t.min, arr: t.arr ?? t.min + legMinutes, endName: t.endName, estimated: t.arr == null,
+  }));
 }
