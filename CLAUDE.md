@@ -39,7 +39,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `public/sw.js`, `public/icons/`: 오프라인 캐시(`/_next/static` 캐시 우선, 페이지 네트워크 우선, `/api` 제외)
 - `tests/`: vitest (`pnpm test`)
 - `spike/`: 외부 API 검증 스크립트(TMAP·TAGO·카카오). `node --env-file=.env.local spike/...`로 실행
-- `docs/`: 사람이 읽는 학습 노트(`learning-notes.md`)와 지난 세션 기록. 앱 코드와 무관
+- `docs/`: 사람이 읽는 문서. 진행 상황·남은 작업(`progress.md`), 학습 노트(`learning-notes.md`), 지난 세션 기록. 앱 코드와 무관
 
 ## 프로젝트 기록
 - 서비스명:
