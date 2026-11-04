@@ -1,0 +1,87 @@
+// 환승 경로 막차 역산 (DOM·네트워크 없음, 서버·테스트 공용)
+//
+// 1) 카카오 경로 응답에서 "지하철 + 역 안 환승 도보"로만 된 경로를 구간 목록으로 뽑는다.
+// 2) 마지막 구간의 막차부터 거꾸로, 앞 구간은 "다음 구간 출발 − 환승 도보" 안에 도착하는 마지막 열차를 고른다.
+
+/** 역 이름 후보. 출처마다 표기가 달라서(잠실(송파구청)·잠실, 총신대입구(이수)·이수) 괄호 앞뒤를 모두 쓴다. */
+export function nameVariants(name: string): string[] {
+  const n = name.trim().replace(/역$/, '');
+  const m = /^(.+?)\((.+)\)$/.exec(n);
+  return m ? [n, m[1]!, m[2]!] : [n];
+}
+
+export const sameStation = (a: string, b: string) => nameVariants(a).some((x) => nameVariants(b).includes(x));
+
+/** 노선 이름 비교용: "신분당선"·"신분당", "공항철도"·"공항"을 같게 본다. N호선은 그대로. */
+export const normLine = (line: string) => (/^\d+호선$/.test(line) ? line : line.trim().replace(/(선|철도)$/, ''));
+
+export type Leg = { line: string; from: string; to: string; minutes: number };
+/** walks[i]: i번째 구간을 타기 전 환승 도보(분). walks[0]은 0 (출발역 도보는 사람마다 따로 입력) */
+export type SubwayRoute = { legs: Leg[]; walks: number[] };
+
+type KakaoStep = {
+  properties?: {
+    type?: string;
+    time?: number; // 초
+    guidance?: string;
+    stops?: { name?: string }[];
+    vehicles?: { name?: string }[];
+  };
+};
+type KakaoBody = { routes?: { steps?: KakaoStep[] }[] };
+
+const toMin = (sec: number | undefined) => Math.ceil((sec ?? 0) / 60);
+
+/** 카카오 경로 응답 → 출발역에서 지하철로 시작해 도착역에서 끝나는 지하철 전용 경로 (같은 구간 조합은 하나만) */
+export function subwayRoutes(body: KakaoBody, origin: string, dest: string): SubwayRoute[] {
+  const out: SubwayRoute[] = [];
+  const seen = new Set<string>();
+  for (const route of body.routes ?? []) {
+    const legs: Leg[] = [];
+    const walks: number[] = [];
+    let walk = 0;
+    let ok = true;
+    for (const s of route.steps ?? []) {
+      const p = s.properties ?? {};
+      if (p.type === 'SUBWAY') {
+        const stops = p.stops ?? [];
+        const from = stops[0]?.name;
+        const to = stops.at(-1)?.name;
+        const line = p.vehicles?.[0]?.name;
+        if (!from || !to || !line) { ok = false; break; }
+        legs.push({ line, from, to, minutes: toMin(p.time) });
+        walks.push(walk);
+        walk = 0;
+      } else if (p.type === 'WALKING' && legs.length > 0 && p.guidance?.includes('환승')) {
+        walk += toMin(p.time); // 역 안 환승만 허용
+      } else {
+        ok = false; // 버스, 역 밖 도보 등
+        break;
+      }
+    }
+    if (!ok || legs.length === 0) continue;
+    if (!sameStation(legs[0]!.from, origin) || !sameStation(legs.at(-1)!.to, dest)) continue;
+    const key = legs.map((l) => `${normLine(l.line)}:${l.from}>${l.to}`).join('|');
+    if (seen.has(key)) continue; // 급행·일반만 다른 같은 경로
+    seen.add(key);
+    out.push({ legs, walks });
+  }
+  return out;
+}
+
+/** 구간 열차: 출발역에서 떠나는 시각과 내릴 역 도착 시각(운행일 기준 분) */
+export type LegTrain = { dep: number; arr: number; endName: string; estimated: boolean };
+
+/** 구간별 "내릴 역까지 가는 열차"(출발 시각 순)로 거꾸로 계산. 이어 탈 수 없으면 null */
+export function planBackward(legs: { trains: LegTrain[]; walkBefore: number }[]): LegTrain[] | null {
+  const chosen: LegTrain[] = [];
+  let deadline = Infinity;
+  for (let i = legs.length - 1; i >= 0; i--) {
+    const leg = legs[i]!;
+    const t = leg.trains.filter((x) => x.arr <= deadline).at(-1);
+    if (!t) return null;
+    chosen[i] = t;
+    deadline = t.dep - leg.walkBefore;
+  }
+  return chosen;
+}
