@@ -39,7 +39,9 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
     setManualOpen(false);
     (async () => {
       try {
-        const qs = new URLSearchParams({ origin: origin.id, dest: dest.id, daily });
+        const qs = new URLSearchParams({
+          origin: origin.id, dest: dest.id, daily, originName: origin.name, destName: dest.name, line: origin.line,
+        });
         const res = await fetch(`/api/last-train?${qs}`, { signal: ctrl.signal });
         const body = await res.json().catch(() => null);
         if (!res.ok || !body) throw new Error(body?.error ?? '막차를 불러오지 못했어요.');

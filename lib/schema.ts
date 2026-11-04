@@ -35,5 +35,9 @@ export const LastTrainQuerySchema = z
     origin: StationId,
     dest: StationId,
     daily: z.enum(['01', '02', '03']),
+    // 서울 시간표 조회용 (역코드 체계가 달라서 이름·노선으로 찾는다). 없으면 TAGO만 쓴다.
+    originName: z.string().trim().min(1).max(30).optional(),
+    destName: z.string().trim().min(1).max(30).optional(),
+    line: z.string().trim().min(1).max(20).optional(),
   })
   .refine((v) => v.origin !== v.dest, '출발역과 도착역이 같아요');
