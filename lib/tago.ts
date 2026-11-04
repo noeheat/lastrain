@@ -50,6 +50,24 @@ export function timetable(stationId: string, daily: string, dir: Dir): Promise<T
   });
 }
 
+/**
+ * 출발·도착역 방향별 시간표. TAGO는 부산 말고는 토요일(02)이 비어 있어서, 그럴 땐 휴일(03) 시간표를 쓴다.
+ * 서울 시간표로 서울교통공사·코레일·9호선은 토요일과 휴일 시간표가 열차까지 같음을 확인했다 (2026-11).
+ * daily: 실제로 쓴 요일 코드
+ */
+export async function stationTimetables(originId: string, destId: string, daily: string) {
+  const load = (d: string) => Promise.all([
+    timetable(originId, d, 'U'), timetable(originId, d, 'D'), timetable(destId, d, 'U'), timetable(destId, d, 'D'),
+  ]);
+  let used = daily;
+  let [oU, oD, dU, dD] = await load(daily);
+  if (daily === '02' && !oU.length && !oD.length) {
+    used = '03';
+    [oU, oD, dU, dD] = await load('03');
+  }
+  return { oU, oD, dU, dD, daily: used };
+}
+
 /** 라우트 공용: TAGO 일시 오류는 502, 설정 오류·그 밖의 예외는 500 */
 export function tagoFailure(e: unknown): Response {
   console.error(e);
@@ -72,10 +90,7 @@ export async function tagoLegTrains(
   };
   const [originId, destId] = await Promise.all([find(from), find(to)]);
   if (!originId || !destId) return null;
-  const [oU, oD, dU, dD] = await Promise.all([
-    timetable(originId, daily, 'U'), timetable(originId, daily, 'D'),
-    timetable(destId, daily, 'U'), timetable(destId, daily, 'D'),
-  ]);
+  const { oU, oD, dU, dD, daily: used } = await stationTimetables(originId, destId, daily);
   const routeId = [...oU, ...oD].find((r) => r.subwayRouteId)?.subwayRouteId;
   if (!routeId) return null;
   const ends = (rows: TimetableRow[]) => new Set(rows.flatMap((r) => (r.endSubwayStationId ? [r.endSubwayStationId] : [])));
@@ -84,5 +99,7 @@ export async function tagoLegTrains(
     origin: { U: toTrains(oU, originId), D: toTrains(oD, originId) },
     destEnds: { U: ends(dU), D: ends(dD) },
   });
-  return trains.map((t) => ({ dep: t.min, arr: t.min + legMinutes, endName: t.endName, estimated: true }));
+  return trains.map((t) => ({
+    dep: t.min, arr: t.min + legMinutes, endName: t.endName, estimated: true, holidayForSaturday: used !== daily,
+  }));
 }

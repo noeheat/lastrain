@@ -12,6 +12,7 @@ export type PlanLeg = {
   dep: string; arr: string; // "HH:MM"
   endName: string;
   estimated: boolean; // 도착 시각이 시간표가 아니라 카카오 소요시간 추정
+  holidayForSaturday: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산
 };
 export type PlanResult = { depart: string; departMin: number; legs: PlanLeg[] };
 
@@ -46,6 +47,7 @@ export async function planTransfer(origin: string, dest: string, daily: Daily): 
         legs: chosen.map((t, i) => ({
           line: route.legs[i]!.line, from: route.legs[i]!.from, to: route.legs[i]!.to,
           dep: clock(t.dep), arr: clock(t.arr), endName: t.endName, estimated: t.estimated,
+          holidayForSaturday: !!t.holidayForSaturday,
         })),
       };
     } catch (e) {

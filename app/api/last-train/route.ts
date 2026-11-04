@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 import { json } from '@/lib/http';
 import { LastTrainQuerySchema } from '@/lib/schema';
 import { DIRS, findLastTrain, toTrains, type LastTrainResult } from '@/lib/reach';
-import { tagoFailure, timetable, type TimetableRow } from '@/lib/tago';
+import { stationTimetables, tagoFailure, type TimetableRow } from '@/lib/tago';
 import { seoulLastTrain } from '@/lib/seoul';
 
 const CANDIDATES = 6;
@@ -32,10 +32,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [oU, oD, dU, dD] = await Promise.all([
-      timetable(origin, daily, 'U'), timetable(origin, daily, 'D'),
-      timetable(dest, daily, 'U'), timetable(dest, daily, 'D'),
-    ]);
+    const { oU, oD, dU, dD, daily: used } = await stationTimetables(origin, dest, daily);
     const routeId = [...oU, ...oD].find((r) => r.subwayRouteId)?.subwayRouteId;
     if (!routeId) return json({ error: '출발역 시간표가 없어요' }, 404);
 
@@ -46,6 +43,7 @@ export async function GET(req: NextRequest) {
     const body: LastTrainResult = {
       last: found && { ...found.last, dir: found.dir },
       candidates: Object.fromEntries(DIRS.map((d) => [d, trains[d].slice(-CANDIDATES)])) as LastTrainResult['candidates'],
+      daily: used as LastTrainResult['daily'],
     };
     return json(body);
   } catch (e) {

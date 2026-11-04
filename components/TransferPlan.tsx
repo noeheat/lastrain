@@ -72,6 +72,7 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, manualFi
 
   const { plan } = state;
   const estimated = plan.legs.some((l) => l.estimated);
+  const holidayLines = plan.legs.filter((l) => l.holidayForSaturday).map((l) => l.line);
   // 지금 값이 자동 결과와 다르면(직접 고친 값, 이전 역의 값) 입력칸을 숨기지 않는다
   const mustShowManual = train !== plan.depart;
 
@@ -88,6 +89,11 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, manualFi
           </li>
         ))}
       </ol>
+      {holidayLines.length > 0 && (
+        <p className={`${hintClass} text-[var(--muted)]`}>
+          {holidayLines.join(', ')}은 토요일 시간표가 없어 일요일·공휴일 시간표로 계산했어요.
+        </p>
+      )}
       {estimated && (
         <p className={`${hintClass} text-[var(--muted)]`}>(추정): 도착 시각을 시간표 대신 경로 소요시간으로 계산했어요.</p>
       )}

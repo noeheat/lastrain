@@ -67,6 +67,9 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
   }
 
   const { last, candidates } = state.result;
+  const dayNote = state.result.daily && state.result.daily !== daily
+    ? `${DAY_LABEL[daily]} 시간표가 없어 ${DAY_LABEL[state.result.daily]} 시간표 기준`
+    : `${DAY_LABEL[daily]} 시간표`;
   // 자동 막차가 있으면 그 방향에서 막차와 그 앞 열차 몇 대만 (막차 뒤 열차는 도착역에 안 간다)
   const list: Train[] = last
     ? [...candidates[last.dir].filter((t) => t.min < last.min).slice(-3), last]
@@ -78,7 +81,7 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
     <div className="mb-3">
       <p className={`${hintClass} text-[var(--muted)]`}>
         {last
-          ? `${dest.name}까지 막차는 ${last.time} ${last.endName}행이에요 (${DAY_LABEL[daily]} 시간표).`
+          ? `${dest.name}까지 막차는 ${last.time} ${last.endName}행이에요 (${dayNote}).`
           : `${dest.name}까지 가는 막차를 자동으로 못 찾았어요. 행선지를 보고 집까지 가는 열차를 골라 주세요.`}
       </p>
       <div className="mt-2 flex flex-wrap gap-1.5">

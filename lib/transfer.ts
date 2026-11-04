@@ -70,7 +70,10 @@ export function subwayRoutes(body: KakaoBody, origin: string, dest: string): Sub
 }
 
 /** 구간 열차: 출발역에서 떠나는 시각과 내릴 역 도착 시각(운행일 기준 분) */
-export type LegTrain = { dep: number; arr: number; endName: string; estimated: boolean };
+export type LegTrain = {
+  dep: number; arr: number; endName: string; estimated: boolean;
+  holidayForSaturday?: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산
+};
 
 /** 구간별 "내릴 역까지 가는 열차"(출발 시각 순)로 거꾸로 계산. 이어 탈 수 없으면 null */
 export function planBackward(legs: { trains: LegTrain[]; walkBefore: number }[]): LegTrain[] | null {

@@ -152,4 +152,5 @@ export function reachingTrainList(r: RouteInput): Train[] {
 export type LastTrainResult = {
   last: (Train & { dir: Dir }) | null; // 자동 판정 결과 (판정 불가면 null)
   candidates: Record<Dir, Train[]>; // 방향별 마지막 몇 대 (직접 고르기용)
+  daily?: '01' | '02' | '03'; // 실제로 쓴 시간표 (토요일 시간표가 없으면 휴일)
 };
