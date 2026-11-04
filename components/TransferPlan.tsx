@@ -11,7 +11,7 @@ const DAY_LABEL = { '01': '평일', '02': '토요일', '03': '일요일·공휴�
 type State =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'done'; plan: PlanResult | null };
+  | { status: 'done'; plan: PlanResult | null; reasons: string[] };
 
 type Props = {
   origin: string; // 역 이름
@@ -43,8 +43,8 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, manualFi
         const res = await fetch(`/api/plan?${new URLSearchParams({ origin, dest, daily })}`, { signal: ctrl.signal });
         const body = await res.json().catch(() => null);
         if (!res.ok || !body) throw new Error(body?.error ?? '환승 경로를 불러오지 못했어요.');
-        const plan = (body as { plan: PlanResult | null }).plan;
-        setState({ status: 'done', plan });
+        const { plan, reasons = [] } = body as { plan: PlanResult | null; reasons?: string[] };
+        setState({ status: 'done', plan, reasons });
         if (autoFill && plan) onChooseRef.current(plan.depart);
       } catch (e) {
         if (ctrl.signal.aborted) return;
@@ -62,7 +62,7 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, manualFi
         <p className={`${hintClass} mb-3 ${state.status === 'error' ? 'text-[var(--error)]' : 'text-[var(--muted)]'}`}>
           {state.status === 'error'
             ? state.message
-            : `${origin}에서 ${dest}까지 지하철 환승 막차를 계산하지 못했어요 (${DAY_LABEL[daily]} 시간표).`}{' '}
+            : `${origin}에서 ${dest}까지 지하철 환승 막차를 계산하지 못했어요 (${DAY_LABEL[daily]} 시간표${state.reasons[0] ? `, ${state.reasons[0]}` : ''}).`}{' '}
           막차 시각을 직접 입력해 주세요.
         </p>
         {manualField}

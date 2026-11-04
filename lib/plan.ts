@@ -29,18 +29,32 @@ async function legTrains(leg: Leg, daily: Daily): Promise<LegTrain[] | null> {
   return tagoLegTrains(leg.from, leg.to, leg.line, daily, leg.minutes);
 }
 
-/** 가장 늦게 출발해도 되는 지하철 경로. 경로가 없거나 이어 탈 수 없으면 plan: null */
-export async function planTransfer(origin: string, dest: string, daily: Daily): Promise<{ plan: PlanResult | null; routes: number }> {
+/**
+ * 가장 늦게 출발해도 되는 지하철 경로. 경로가 없거나 이어 탈 수 없으면 plan: null.
+ * reasons: 경로를 버린 이유 (plan이 null일 때 화면에 원인을 보여주려고)
+ */
+export async function planTransfer(
+  origin: string, dest: string, daily: Daily,
+): Promise<{ plan: PlanResult | null; routes: number; reasons: string[] }> {
   const [a, b] = await Promise.all([stationCoord(origin), stationCoord(dest)]);
-  if (!a || !b) return { plan: null, routes: 0 };
+  if (!a || !b) return { plan: null, routes: 0, reasons: ['역 위치를 찾지 못했어요'] };
   const routes = subwayRoutes(await transitRoutes(a, b), origin, dest).slice(0, MAX_ROUTES);
+  const reasons = new Set<string>();
+  if (routes.length === 0) reasons.add('지하철로만 가는 경로가 없어요');
 
   const plans = await Promise.all(routes.map(async (route): Promise<PlanResult | null> => {
     try {
       const lists = await Promise.all(route.legs.map((leg) => legTrains(leg, daily)));
-      if (lists.some((l) => !l)) return null; // 시간표를 못 찾은 구간이 있으면 이 경로는 버린다
+      const missing = route.legs.find((_, i) => !lists[i]);
+      if (missing) { // 시간표를 못 찾은 구간이 있으면 이 경로는 버린다
+        reasons.add(`${missing.line} ${missing.from}→${missing.to} 시간표를 찾지 못했어요`);
+        return null;
+      }
       const chosen = planBackward(lists.map((trains, i) => ({ trains: trains!, walkBefore: route.walks[i] ?? 0 })));
-      if (!chosen) return null;
+      if (!chosen) {
+        reasons.add('환승해서 이어 탈 수 있는 열차가 없어요');
+        return null;
+      }
       return {
         depart: clock(chosen[0]!.dep),
         departMin: chosen[0]!.dep,
@@ -52,9 +66,10 @@ export async function planTransfer(origin: string, dest: string, daily: Daily): 
       };
     } catch (e) {
       console.error(e);
+      reasons.add(e instanceof Error ? e.message : '시간표를 불러오지 못했어요');
       return null;
     }
   }));
   const best = plans.reduce<PlanResult | null>((acc, p) => (p && (!acc || p.departMin > acc.departMin) ? p : acc), null);
-  return { plan: best, routes: routes.length };
+  return { plan: best, routes: routes.length, reasons: best ? [] : [...reasons] };
 }

@@ -23,7 +23,13 @@ async function get<T>(op: string, params: Record<string, string>): Promise<T[]> 
   // URLSearchParams가 인코딩하므로 Decoding 키를 그대로 넣는다
   const qs = new URLSearchParams({ serviceKey: key, _type: 'json', numOfRows: '1000', pageNo: '1', ...params });
   // 역 목록·시간표는 거의 안 바뀌므로 하루 캐시 (TAGO 일일 호출 한도 절약)
-  const res = await fetch(`${BASE}/${op}?${qs}`, { next: { revalidate: DAY } });
+  // TAGO는 가끔 연결이 10초 넘게 안 되므로, 8초에 끊고 한 번 더 시도한다
+  let res: Response | null = null;
+  for (let attempt = 0; attempt < 2 && !res; attempt++) {
+    res = await fetch(`${BASE}/${op}?${qs}`, { next: { revalidate: DAY }, signal: AbortSignal.timeout(8000) })
+      .catch((e) => (console.error(`TAGO ${op} 연결 실패 (${attempt + 1}회)`, e), null));
+  }
+  if (!res) throw new TagoError('TAGO 시간표 서버에 연결하지 못했어요');
   const body = await res.json().catch(() => null);
   const header = body?.response?.header;
   if (!res.ok || !header) throw new TagoError(`TAGO 응답 오류 (HTTP ${res.status})`);
