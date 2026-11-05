@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { computePlan, formatClock, formatRemaining, type Person } from '@/lib/time';
+import { useEffect, useRef, useState } from 'react';
+import { computePlan, formatClock, formatRemaining, levelFor, type Level, type Person, type PlanRow } from '@/lib/time';
 import { isStale, type Origin } from '@/lib/origin';
 import { MAX_PEOPLE } from '@/lib/schema';
 
@@ -14,9 +14,19 @@ type Props = {
   onAdd: () => void;
 };
 
-/** 홈 화면: 출발역, 가장 급한 사람의 카운트다운, 사람 카드(누르면 편집), 사람 추가 */
+// 한 사람의 상태. row가 없으면 출발역이 바뀌어 막차를 다시 확인해야 하는 사람
+type Item = { person: Person; row: PlanRow | null; level: Level };
+
+const levelOf = (row: PlanRow | null): Level =>
+  !row ? 'missed' : row.missed ? 'missed' : levelFor(row.msToDepart);
+
+/**
+ * 홈 화면: 출발역, 한 사람씩 넘겨 보는 큰 카운트다운, 사람 칩(각자 남은 시간·색), 사람 추가.
+ * 직접 넘기기 전에는 가장 급한 사람을 보여주고, 그 사람이 바뀌면(막차를 놓침 등) 따라간다.
+ */
 export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerson, onAdd }: Props) {
   const [now, setNow] = useState(() => new Date(Date.now() + nowOffset));
+  const [picked, setPicked] = useState<number | null>(null); // 직접 고른 사람 (null이면 가장 급한 사람)
 
   // 초 경계에 맞춰 갱신하고, 탭이 숨겨지면 멈췄다가 돌아오면 즉시 다시 계산
   useEffect(() => {
@@ -38,28 +48,40 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
     };
   }, [nowOffset]);
 
-  // 출발역이 바뀌어 막차가 맞지 않는 사람은 카운트다운에서 뺀다 (카드를 눌러 다시 확인)
+  // 출발역이 바뀌어 막차가 맞지 않는 사람은 계산에서 뺀다 (수정해서 다시 확인)
   const activeIdx = people.flatMap((p, i) => (isStale(p, origin) ? [] : [i]));
-  const { rows, lead, level } = computePlan(activeIdx.map((i) => people[i]!), now);
-  const counting = rows.length > 0;
+  const { rows, lead } = computePlan(activeIdx.map((i) => people[i]!), now);
+  const items: Item[] = people.map((person, i) => {
+    const k = activeIdx.indexOf(i);
+    const row = k >= 0 ? rows[k]! : null;
+    return { person, row, level: levelOf(row) };
+  });
+
+  const leadIdx = lead >= 0 ? activeIdx[lead]! : 0;
+  const current = picked != null && picked < people.length ? picked : leadIdx;
+  const item = items[current];
+  const level: Level = item ? item.level : 'calm';
 
   useEffect(() => {
-    document.body.classList.toggle('counting', counting);
-    document.body.dataset.level = counting ? level : 'calm';
-  }, [counting, level]);
+    document.body.classList.toggle('counting', !!item);
+    document.body.dataset.level = level;
+  }, [item, level]);
 
-  const onRed = counting && level === 'go';
+  const go = (step: number) => setPicked((current + step + people.length) % people.length);
+  const onRed = level === 'go';
   const muted = onRed ? 'text-white/75' : 'text-[var(--muted)]';
 
   return (
     <section className="flex flex-col items-center text-center">
-      {origin.text && <button
-        type="button"
-        onClick={onEditOrigin}
-        className={`mb-2 min-h-11 rounded-full border px-4 text-[0.95rem] ${onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--text)]'}`}
-      >
-        {origin.text}에서 출발 <span className={muted}>· 바꾸기</span>
-      </button>}
+      {origin.text && (
+        <button
+          type="button"
+          onClick={onEditOrigin}
+          className={`mb-2 min-h-11 rounded-full border px-4 text-[0.95rem] ${onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--text)]'}`}
+        >
+          {origin.text}에서 출발 <span className={muted}>· 바꾸기</span>
+        </button>
+      )}
 
       {!origin.text ? (
         <Empty title="어디서 출발하나요?" body="함께 있는 곳에서 가까운 역을 고르면, 각자 막차에 맞춰 언제 일어나야 하는지 알려줘요.">
@@ -67,56 +89,129 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
             출발역 고르기
           </button>
         </Empty>
-      ) : people.length === 0 ? (
+      ) : !item ? (
         <Empty title="누구의 막차를 볼까요?" body="사람마다 집 근처 역을 넣으면 막차를 자동으로 찾아요." />
       ) : (
-        <Clock rows={rows} lead={lead} level={level} onRed={onRed} />
+        <Focus
+          item={item}
+          count={people.length}
+          index={current}
+          onRed={onRed}
+          onStep={go}
+          onEdit={() => onEditPerson(current)}
+        />
       )}
 
-      {people.length > 0 && (
-        <ul className="grid w-full gap-2.5">
-          {people.map((p, i) => {
-            const k = activeIdx.indexOf(i);
-            const r = k >= 0 ? rows[k]! : null;
-            return (
-              <li key={i}>
-                <button
-                  type="button"
-                  onClick={() => onEditPerson(i)}
-                  className={`flex w-full items-center justify-between gap-3 rounded-xl border bg-white/5 px-4 py-3.5 text-left ${
-                    r && k === lead ? 'border-[var(--state)]' : 'border-white/10'
-                  } ${r?.missed ? 'opacity-55' : ''}`}
-                >
-                  <div className="min-w-0">
-                    <div className="font-semibold">{p.name}</div>
-                    <div className={`mt-0.5 text-[0.85rem] ${muted}`}>
-                      {r
-                        ? `${p.dest?.name ?? p.station} · 막차 ${formatClock(r.trainAt)} · 도보 ${p.walk}분 · ${formatClock(r.departAt)} 출발`
-                        : '출발역이 바뀌었어요 · 눌러서 막차 다시 확인'}
-                    </div>
-                  </div>
-                  <div className="font-semibold whitespace-nowrap tabular-nums">
-                    {!r ? '확인' : r.missed ? '놓침' : r.msToDepart <= 0 ? '출발!' : formatRemaining(r.msToDepart)}
-                  </div>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      {origin.text && people.length < MAX_PEOPLE && (
-        <button
-          type="button"
-          onClick={onAdd}
-          className={`mt-3 block min-h-[52px] w-full rounded-xl border border-dashed text-[1.05rem] font-semibold ${
-            onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--muted)]'
-          }`}
-        >
-          + 사람 추가
-        </button>
+      {origin.text && (
+        <div className="mt-2 flex w-full flex-wrap justify-center gap-2">
+          {people.length > 1 && items.map((it, i) => (
+            <button
+              key={i}
+              type="button"
+              data-lv={it.level}
+              aria-pressed={i === current}
+              onClick={() => setPicked(i)}
+              className={`flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-[0.95rem] tabular-nums ${
+                i === current
+                  ? onRed ? 'border-white text-white' : 'border-[var(--lv)] text-[var(--text)]'
+                  : onRed ? 'border-white/40 text-white/80' : 'border-white/10 text-[var(--muted)]'
+              }`}
+            >
+              <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--lv)]" />
+              {it.person.name} <span className="font-semibold">{shortStatus(it)}</span>
+            </button>
+          ))}
+          {people.length < MAX_PEOPLE && (
+            <button
+              type="button"
+              onClick={onAdd}
+              className={`min-h-11 rounded-full border border-dashed px-3.5 text-[0.95rem] ${
+                onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--muted)]'
+              } ${people.length === 0 ? 'w-full min-h-[52px] rounded-xl text-[1.05rem] font-semibold' : ''}`}
+            >
+              + 사람 추가
+            </button>
+          )}
+        </div>
       )}
     </section>
+  );
+}
+
+/** 칩에 들어가는 짧은 상태 */
+function shortStatus({ row }: Item): string {
+  if (!row) return '확인';
+  if (row.missed) return '놓침';
+  return row.msToDepart <= 0 ? '출발!' : formatRemaining(row.msToDepart);
+}
+
+type FocusProps = { item: Item; count: number; index: number; onRed: boolean; onStep: (step: number) => void; onEdit: () => void };
+
+/** 한 사람의 큰 카운트다운. 좌우로 밀거나 ‹ › 로 다음 사람 */
+function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
+  const { person, row, level } = item;
+  const startX = useRef<number | null>(null);
+  const dest = person.dest?.name ?? '';
+
+  let clock: string;
+  let sub: string;
+  if (!row) {
+    clock = '--:--';
+    sub = '출발역이 바뀌었어요. 막차를 다시 확인해 주세요';
+  } else if (row.missed) {
+    clock = '놓침';
+    sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
+  } else if (level === 'go') {
+    clock = '지금 출발!';
+    sub = `${row.station} 막차 ${formatClock(row.trainAt)}까지 ${formatRemaining(row.msToTrain)}`;
+  } else {
+    clock = formatRemaining(row.msToDepart);
+    sub = `${formatClock(row.departAt)}에 출발 · ${row.station} 막차 ${formatClock(row.trainAt)}`;
+  }
+  const isText = !row || row.missed || level === 'go';
+  const arrow = `min-h-11 min-w-11 text-[1.6rem] leading-none ${onRed ? 'text-white' : 'text-[var(--muted)]'}`;
+
+  return (
+    <div
+      className="w-full touch-pan-y pt-[4vh] pb-4 select-none"
+      onPointerDown={(e) => { startX.current = e.clientX; }}
+      onPointerUp={(e) => {
+        const dx = startX.current == null ? 0 : e.clientX - startX.current;
+        startX.current = null;
+        if (count > 1 && Math.abs(dx) > 50) onStep(dx < 0 ? 1 : -1);
+      }}
+    >
+      <div className="flex items-center justify-between">
+        {count > 1 ? <button type="button" aria-label="이전 사람" onClick={() => onStep(-1)} className={arrow}>‹</button> : <span />}
+        <p className={`m-0 text-[1.1rem] ${onRed ? 'text-white' : 'text-[var(--state)]'}`}>
+          {person.name}{dest && <span className={onRed ? 'text-white/75' : 'text-[var(--muted)]'}> → {dest}</span>}
+        </p>
+        {count > 1 ? <button type="button" aria-label="다음 사람" onClick={() => onStep(1)} className={arrow}>›</button> : <span />}
+      </div>
+      <p
+        aria-live="off"
+        className={`clock my-2 leading-none font-bold tracking-[-0.02em] tabular-nums text-[var(--state)] transition-colors duration-500 ${
+          isText ? 'text-[clamp(3rem,16vw,6rem)]' : 'text-[clamp(4rem,24vw,9rem)]'
+        }`}
+      >
+        {clock}
+      </p>
+      <p className={`m-0 text-[0.95rem] ${onRed ? 'text-white' : 'text-[var(--muted)]'}`}>{sub}</p>
+      {count > 1 && (
+        <div aria-hidden className="mt-3 flex justify-center gap-1.5">
+          {Array.from({ length: count }, (_, i) => (
+            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === index ? (onRed ? 'bg-white' : 'bg-[var(--state)]') : 'bg-white/25'}`} />
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={onEdit}
+        className={`mt-3 min-h-11 px-3 text-[0.95rem] underline ${!row ? 'font-semibold text-[var(--accent)]' : onRed ? 'text-white' : 'text-[var(--muted)]'}`}
+      >
+        {!row ? '막차 다시 확인' : `${person.name} 수정`}
+      </button>
+    </div>
   );
 }
 
@@ -126,46 +221,6 @@ function Empty({ title, body, children }: { title: string; body: string; childre
       <p className="m-0 text-[1.3rem] font-bold">{title}</p>
       <p className="mt-2 text-[0.95rem] text-[var(--muted)]">{body}</p>
       {children}
-    </div>
-  );
-}
-
-type ClockProps = { rows: ReturnType<typeof computePlan>['rows']; lead: number; level: string; onRed: boolean };
-
-function Clock({ rows, lead, level, onRed }: ClockProps) {
-  const r = rows[lead];
-  let label: string;
-  let clock: string;
-  let sub: string;
-  if (rows.length === 0) {
-    label = '막차를 다시 확인해 주세요';
-    clock = '--:--';
-    sub = '출발역이 바뀐 사람의 카드를 눌러 주세요';
-  } else if (!r) {
-    label = '오늘 막차는 모두 지났어요';
-    clock = '막차 끝';
-    sub = '택시나 심야버스를 찾아보세요';
-  } else if (level === 'go') {
-    label = `${r.name} 출발 시각이 지났어요`;
-    clock = '지금 출발!';
-    sub = `${r.station} 막차 ${formatClock(r.trainAt)}까지 ${formatRemaining(r.msToTrain)}`;
-  } else {
-    label = `${r.name} 출발까지`;
-    clock = formatRemaining(r.msToDepart);
-    sub = `${formatClock(r.departAt)}에 출발 · ${r.station} 막차 ${formatClock(r.trainAt)}`;
-  }
-  const isText = !r;
-  return (
-    <div className="pt-[5vh]">
-      <p className={`m-0 text-[1.1rem] opacity-90 ${onRed ? 'text-white' : 'text-[var(--state)]'}`}>{label}</p>
-      <p
-        className={`clock my-2 leading-none font-bold tracking-[-0.02em] tabular-nums text-[var(--state)] transition-colors duration-500 ${
-          isText || level === 'go' ? 'text-[clamp(3rem,16vw,6rem)]' : 'text-[clamp(4rem,24vw,9rem)]'
-        }`}
-      >
-        {clock}
-      </p>
-      <p className={`mb-8 text-[0.95rem] ${onRed ? 'text-white' : 'text-[var(--muted)]'}`}>{sub}</p>
     </div>
   );
 }

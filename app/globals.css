@@ -18,6 +18,13 @@ body[data-level="urgent"] { --state: #ff5d5d; --state-bg: #261012; }
 body[data-level="go"]     { --state: #ffffff; --state-bg: #c62828; }
 body[data-level="missed"] { --state: #8e98ad; --state-bg: #14171f; }
 
+/* 사람 칩의 점·테두리 색 (사람마다 따로라 data-lv로 고른다) */
+[data-lv="calm"]   { --lv: #5fd3a0; }
+[data-lv="warn"]   { --lv: #ffc24b; }
+[data-lv="urgent"] { --lv: #ff5d5d; }
+[data-lv="go"]     { --lv: #ffffff; }
+[data-lv="missed"] { --lv: #8e98ad; }
+
 body {
   background: var(--bg);
   color: var(--text);
