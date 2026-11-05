@@ -4,7 +4,9 @@ import { nameVariants, sameStation, normLine, subwayRoutes, planBackward, type L
 
 test('nameVariants·sameStation: 괄호 표기와 "역" 접미사', () => {
   assert.deepEqual(nameVariants('잠실(송파구청)'), ['잠실(송파구청)', '잠실', '송파구청']);
-  assert.deepEqual(nameVariants('강남역'), ['강남']);
+  assert.deepEqual(nameVariants('강남역'), ['강남', '강남역']);
+  assert.deepEqual(nameVariants('서울역'), ['서울', '서울역']); // 서울 시간표 표기는 "서울역"
+  assert.deepEqual(nameVariants('불암산(당고개)'), ['불암산(당고개)', '불암산', '당고개']);
   assert.ok(sameStation('총신대입구(이수)', '이수'));
   assert.ok(sameStation('잠실', '잠실(송파구청)'));
   assert.ok(!sameStation('잠실', '잠실새내'));

@@ -5,9 +5,12 @@
 
 /** 역 이름 후보. 출처마다 표기가 달라서(잠실(송파구청)·잠실, 총신대입구(이수)·이수) 괄호 앞뒤를 모두 쓴다. */
 export function nameVariants(name: string): string[] {
-  const n = name.trim().replace(/역$/, '');
+  const raw = name.trim();
+  const n = raw.replace(/역$/, '');
   const m = /^(.+?)\((.+)\)$/.exec(n);
-  return m ? [n, m[1]!, m[2]!] : [n];
+  const list = m ? [n, m[1]!, m[2]!] : [n];
+  // "서울역"은 '역'까지가 이름이다. 서울 시간표에서 "서울"로 찾으면 GTX-A만 나오므로 원래 이름도 마지막에 찾는다
+  return raw === n ? list : [...list, raw];
 }
 
 export const sameStation = (a: string, b: string) => nameVariants(a).some((x) => nameVariants(b).includes(x));
