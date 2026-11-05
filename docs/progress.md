@@ -101,8 +101,9 @@
 14. **서비스 워커·PWA** — 11-05 Preview(HTTPS)에서 확인: 서비스 워커 등록·활성(페이지 제어 중), manifest(`application/manifest+json`)·아이콘 3개 200, `sw.js`는 `max-age=0`이라 배포하면 바로 갱신된다. 새로고침 뒤 페이지가 쓰는 `/_next` 파일 6개가 모두 캐시에 있다(빠진 1개는 구형 브라우저용 `nomodule` 폴리필).
    - 남은 것: **휴대폰에서 직접** 홈 화면 추가(iOS Safari·Android Chrome)와 비행기 모드에서 다시 열기. 브라우저 패널은 네트워크를 끊을 수 없어 확인하지 못했다.
 15. **배포 정리**
-    - `main`에 Next.js 코드가 들어가 GitHub Pages(v1)가 404다.
-    - `v2/nextjs`를 `main`에 합칠지, Production 배포를 어떻게 할지 정해야 한다.
+    - 11-05 확인: `main`은 `v2/nextjs`의 조상이라 fast-forward로 합칠 수 있다. GitHub Pages는 이미 꺼져 있다. API 키 3개는 Vercel Production에도 등록돼 있다.
+    - Production(https://lastrain-ukck.vercel.app)은 로그인 없이 열리지만 `main`의 v2 1단계(API 없음)다.
+    - **11-05 결정: 기능을 더 만든 뒤 공개한다.** 공개할 때 `main`을 fast-forward해 push하면 Production이 자동 배포된다. 그 전에 Production을 숨기려면 Vercel Deployment Protection 설정(직접).
 16. **정리할 것**
     - `AGENTS.md`(`next dev`가 만든 파일)가 커밋되지 않았다.
     - CLAUDE.md "프로젝트 기록"(서비스명, 배포일, URL)이 비어 있다.
