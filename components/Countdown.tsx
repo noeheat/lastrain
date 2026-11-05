@@ -68,8 +68,6 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
   }, [item, level]);
 
   const go = (step: number) => setPicked((current + step + people.length) % people.length);
-  const onRed = level === 'go';
-  const muted = onRed ? 'text-white/75' : 'text-[var(--muted)]';
 
   return (
     <section className="flex flex-col items-center text-center">
@@ -77,9 +75,9 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
         <button
           type="button"
           onClick={onEditOrigin}
-          className={`mb-2 min-h-11 rounded-full border px-4 text-[0.95rem] ${onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--text)]'}`}
+          className="mb-2 min-h-11 rounded-full border px-4 text-[0.95rem] border-[var(--border)] text-[var(--text)]"
         >
-          {origin.text}에서 출발 <span className={muted}>· 바꾸기</span>
+          {origin.text}에서 출발 <span className="text-[var(--muted)]">· 바꾸기</span>
         </button>
       )}
 
@@ -96,7 +94,6 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
           item={item}
           count={people.length}
           index={current}
-          onRed={onRed}
           onStep={go}
           onEdit={() => onEditPerson(current)}
         />
@@ -113,8 +110,8 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
               onClick={() => setPicked(i)}
               className={`flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-[0.95rem] tabular-nums ${
                 i === current
-                  ? onRed ? 'border-white text-white' : 'border-[var(--lv)] text-[var(--text)]'
-                  : onRed ? 'border-white/40 text-white/80' : 'border-white/10 text-[var(--muted)]'
+                  ? 'border-[var(--lv)] text-[var(--text)]'
+                  : 'border-white/10 text-[var(--muted)]'
               }`}
             >
               <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--lv)]" />
@@ -125,9 +122,9 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
             <button
               type="button"
               onClick={onAdd}
-              className={`min-h-11 rounded-full border border-dashed px-3.5 text-[0.95rem] ${
-                onRed ? 'border-white/50 text-white' : 'border-[var(--border)] text-[var(--muted)]'
-              } ${people.length === 0 ? 'w-full min-h-[52px] rounded-xl text-[1.05rem] font-semibold' : ''}`}
+              className={`min-h-11 rounded-full border border-dashed border-[var(--border)] px-3.5 text-[0.95rem] text-[var(--muted)] ${
+                people.length === 0 ? 'w-full min-h-[52px] rounded-xl text-[1.05rem] font-semibold' : ''
+              }`}
             >
               + 사람 추가
             </button>
@@ -145,10 +142,10 @@ function shortStatus({ row }: Item): string {
   return formatRemaining(row.msToTrain);
 }
 
-type FocusProps = { item: Item; count: number; index: number; onRed: boolean; onStep: (step: number) => void; onEdit: () => void };
+type FocusProps = { item: Item; count: number; index: number; onStep: (step: number) => void; onEdit: () => void };
 
 /** 한 사람의 큰 카운트다운. 좌우로 밀거나 ‹ › 로 다음 사람 */
-function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
+function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
   const { person, row, level } = item;
   const startX = useRef<number | null>(null);
   const dest = person.dest?.name ?? '';
@@ -166,7 +163,7 @@ function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
     sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 막차`;
   }
   const isText = !row || row.missed;
-  const arrow = `min-h-11 min-w-11 text-[1.6rem] leading-none ${onRed ? 'text-white' : 'text-[var(--muted)]'}`;
+  const arrow = 'min-h-11 min-w-11 text-[1.6rem] leading-none text-[var(--muted)]';
 
   return (
     <div
@@ -180,8 +177,8 @@ function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
     >
       <div className="flex items-center justify-between">
         {count > 1 ? <button type="button" aria-label="이전 사람" onClick={() => onStep(-1)} className={arrow}>‹</button> : <span />}
-        <p className={`m-0 text-[1.1rem] ${onRed ? 'text-white' : 'text-[var(--state)]'}`}>
-          {person.name}{dest && <span className={onRed ? 'text-white/75' : 'text-[var(--muted)]'}> → {dest}</span>}
+        <p className="m-0 text-[1.1rem] text-[var(--state)]">
+          {person.name}{dest && <span className="text-[var(--muted)]"> → {dest}</span>}
         </p>
         {count > 1 ? <button type="button" aria-label="다음 사람" onClick={() => onStep(1)} className={arrow}>›</button> : <span />}
       </div>
@@ -193,18 +190,18 @@ function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
       >
         {clock}
       </p>
-      <p className={`m-0 text-[0.95rem] ${onRed ? 'text-white' : 'text-[var(--muted)]'}`}>{sub}</p>
+      <p className="m-0 text-[0.95rem] text-[var(--muted)]">{sub}</p>
       {count > 1 && (
         <div aria-hidden className="mt-3 flex justify-center gap-1.5">
           {Array.from({ length: count }, (_, i) => (
-            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === index ? (onRed ? 'bg-white' : 'bg-[var(--state)]') : 'bg-white/25'}`} />
+            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === index ? 'bg-[var(--state)]' : 'bg-white/25'}`} />
           ))}
         </div>
       )}
       <button
         type="button"
         onClick={onEdit}
-        className={`mt-3 min-h-11 px-3 text-[0.95rem] underline ${!row ? 'font-semibold text-[var(--accent)]' : onRed ? 'text-white' : 'text-[var(--muted)]'}`}
+        className={`mt-3 min-h-11 px-3 text-[0.95rem] underline ${!row ? 'font-semibold text-[var(--accent)]' : 'text-[var(--muted)]'}`}
       >
         {!row ? '막차 다시 확인' : `${person.name} 수정`}
       </button>

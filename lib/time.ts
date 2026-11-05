@@ -3,7 +3,7 @@
 export const DAY_START_MIN = 4 * 60; // 운행일 경계 04:00
 const MIN = 60_000;
 
-export type Level = 'calm' | 'warn' | 'urgent' | 'go' | 'missed';
+export type Level = 'calm' | 'warn' | 'urgent' | 'missed';
 
 export type StationRef = { id: string; name: string; line: string };
 
@@ -51,7 +51,6 @@ export function trainTime(hhmm: string, now: Date): Date | null {
 
 /** 막차까지 남은 ms → 색 단계 (카운트다운은 막차가 출발역을 떠나는 시각까지 센다) */
 export function levelFor(ms: number): Exclude<Level, 'missed'> {
-  if (ms <= 0) return 'go';
   if (ms <= 10 * MIN) return 'urgent';
   if (ms <= 30 * MIN) return 'warn';
   return 'calm';

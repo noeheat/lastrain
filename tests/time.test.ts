@@ -47,7 +47,7 @@ test('색 단계 경계', () => {
   assert.equal(levelFor(10 * MIN + 1000), 'warn');
   assert.equal(levelFor(10 * MIN), 'urgent');
   assert.equal(levelFor(1000), 'urgent');
-  assert.equal(levelFor(0), 'go');
+  assert.equal(levelFor(0), 'urgent'); // 막차 시각이 되면 놓침(missed)으로 따로 판정한다
 });
 
 test('막차가 더 이른 사람이 기준, 놓친 사람은 제외', () => {
