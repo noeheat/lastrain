@@ -9,6 +9,17 @@ export const StationSchema = z.object({
   line: z.string().max(20),
 });
 
+const HHMM = z.string().refine((v) => parseHHMM(v) != null, '시각 형식이 잘못됐어요');
+
+export const RouteLegSchema = z.object({
+  line: z.string().max(20),
+  from: z.string().max(30),
+  to: z.string().max(30),
+  dep: HHMM,
+  arr: HHMM.optional(),
+  endName: z.string().max(30),
+});
+
 export const PersonSchema = z.object({
   name: z.string().trim().min(1).max(20),
   station: z.string().trim().min(1).max(30),
@@ -17,6 +28,7 @@ export const PersonSchema = z.object({
   // 검색으로 고른 역 (직접 입력했거나 v2 2단계 이전 저장값이면 없음)
   origin: StationSchema.optional(),
   dest: StationSchema.optional(),
+  route: z.array(RouteLegSchema).min(1).max(5).optional(),
 });
 
 export const MAX_PEOPLE = 6;

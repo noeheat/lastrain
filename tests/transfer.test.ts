@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { nameVariants, sameStation, normLine, subwayRoutes, planBackward, type LegTrain } from '../lib/transfer';
+import { nameVariants, sameStation, normLine, lineLabel, subwayRoutes, planBackward, type LegTrain } from '../lib/transfer';
 
 test('nameVariants·sameStation: 괄호 표기와 "역" 접미사', () => {
   assert.deepEqual(nameVariants('잠실(송파구청)'), ['잠실(송파구청)', '잠실', '송파구청']);
@@ -62,4 +62,13 @@ test('planBackward: 마지막 구간 막차에 맞춰 앞 구간은 환승 도�
 test('planBackward: 앞 구간에 맞는 열차가 없으면 null', () => {
   assert.equal(planBackward([{ trains: [t(1400, 1430)], walkBefore: 0 }, { trains: [t(1420, 1440)], walkBefore: 3 }]), null);
   assert.equal(planBackward([{ trains: [], walkBefore: 0 }]), null);
+});
+
+test('lineLabel: 화면용 노선 이름을 하나로', () => {
+  assert.equal(lineLabel('신분당'), '신분당선');
+  assert.equal(lineLabel('신분당선'), '신분당선');
+  assert.equal(lineLabel('수인분당'), '수인분당선');
+  assert.equal(lineLabel('공항'), '공항철도');
+  assert.equal(lineLabel('공항철도'), '공항철도');
+  assert.equal(lineLabel('2호선'), '2호선');
 });

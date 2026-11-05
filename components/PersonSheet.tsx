@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Person, StationRef } from '@/lib/time';
+import type { Person, RouteLeg, StationRef } from '@/lib/time';
 import { PersonSchema } from '@/lib/schema';
 import { originFor, pairKey, type Origin } from '@/lib/origin';
 import { StationPicker } from './StationPicker';
@@ -11,11 +11,11 @@ import { LastTrainField } from './LastTrainField';
 import { inputClass, labelClass } from './formStyles';
 
 // destText는 입력칸 글자, dest는 검색 결과에서 고른 역 (고르지 않았으면 null)
-type Draft = { name: string; destText: string; train: string; dest: StationRef | null };
+type Draft = { name: string; destText: string; train: string; dest: StationRef | null; route?: RouteLeg[] };
 
 const toDraft = (p: Person | null): Draft =>
   p
-    ? { name: p.name, train: p.train, dest: p.dest ?? null, destText: p.dest?.name ?? '' }
+    ? { name: p.name, train: p.train, dest: p.dest ?? null, destText: p.dest?.name ?? '', route: p.route }
     : { name: '', destText: '', train: '', dest: null };
 
 // 저장할 때의 출발역·도착역. 지금 출발역과 다르면(출발역이 바뀜) 막차를 자동으로 다시 채운다
@@ -43,6 +43,7 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
     const parsed = PersonSchema.safeParse({
       name: d.name, station: origin.text, train: d.train,
       origin: from ?? undefined, dest: d.dest ?? undefined,
+      route: d.route?.[0]?.dep === d.train ? d.route : undefined, // 직접 고친 시각이면 경로를 버린다
     });
     if (!parsed.success) {
       setInvalid(new Set(parsed.error.issues.map((i) => String(i.path[0]))));
@@ -52,7 +53,7 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
     onSave(parsed.data);
   }
 
-  const onTrain = (train: string) => update({ train });
+  const onTrain = (train: string, route?: RouteLeg[]) => update({ train, route });
   const trainInvalid = invalid.has('train');
 
   return (

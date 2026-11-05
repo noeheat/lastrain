@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { computePlan, formatClock, formatRemaining, levelFor, type Level, type Person, type PlanRow } from '@/lib/time';
 import { isStale, type Origin } from '@/lib/origin';
 import { MAX_PEOPLE } from '@/lib/schema';
+import { lineLabel } from '@/lib/transfer';
 
 type Props = {
   origin: Origin;
@@ -146,9 +147,12 @@ type FocusProps = { item: Item; count: number; index: number; onStep: (step: num
 
 /** 한 사람의 큰 카운트다운. 좌우로 밀거나 ‹ › 로 다음 사람 */
 function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
-  const { person, row, level } = item;
+  const { person, row } = item;
   const startX = useRef<number | null>(null);
   const dest = person.dest?.name ?? '';
+  // 저장한 막차 경로 (직접 입력한 시각이거나 예전 저장값이면 없음)
+  const route = person.route?.[0]?.dep === person.train ? person.route : undefined;
+  const one = route?.length === 1 ? route[0]! : null;
 
   let clock: string;
   let sub: string;
@@ -160,7 +164,8 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
     sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
   } else {
     clock = formatRemaining(row.msToTrain);
-    sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 막차`;
+    const what = one ? `${lineLabel(one.line)} ${one.endName}행 막차` : route ? `막차 · 환승 ${route.length - 1}번` : '막차';
+    sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
   }
   const isText = !row || row.missed;
   const arrow = 'min-h-11 min-w-11 text-[1.6rem] leading-none text-[var(--muted)]';
@@ -191,6 +196,16 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
         {clock}
       </p>
       <p className="m-0 text-[0.95rem] text-[var(--muted)]">{sub}</p>
+      {row && !row.missed && route && route.length > 1 && (
+        <ol className="mx-auto mt-3 max-w-[340px] space-y-1 text-left text-[0.85rem]">
+          {route.map((l, i) => (
+            <li key={i} className="rounded-lg border border-white/10 px-3 py-2">
+              <span className="font-semibold">{lineLabel(l.line)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
+              <span className="text-[var(--muted)]"> · {l.endName}행</span>
+            </li>
+          ))}
+        </ol>
+      )}
       {count > 1 && (
         <div aria-hidden className="mt-3 flex justify-center gap-1.5">
           {Array.from({ length: count }, (_, i) => (

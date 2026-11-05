@@ -38,3 +38,12 @@ test('SavedSchema: 예전 2명 저장값도, 1명·origin 포함 새 저장값�
   assert.ok(SavedSchema.safeParse({ origin: { text: '', options: [] }, people: [] }).success);
   assert.equal(SavedSchema.safeParse({ people: Array.from({ length: 7 }, () => person({})) }).success, false);
 });
+
+test('SavedSchema: 막차 경로(route)를 저장하고 읽는다, 잘못된 시각은 거절', () => {
+  const route = [
+    { line: '신분당선', from: '강남', to: '논현', dep: '00:23', arr: '00:27', endName: '신사' },
+    { line: '7호선', from: '논현', to: '이수', dep: '00:36', arr: '00:45', endName: '신풍' },
+  ];
+  assert.ok(SavedSchema.safeParse({ people: [person({ train: '00:23', route })] }).success);
+  assert.equal(SavedSchema.safeParse({ people: [person({ route: [{ ...route[0]!, dep: '25:00' }] })] }).success, false);
+});

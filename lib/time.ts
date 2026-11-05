@@ -7,6 +7,9 @@ export type Level = 'calm' | 'warn' | 'urgent' | 'missed';
 
 export type StationRef = { id: string; name: string; line: string };
 
+/** 막차 경로의 한 구간 (환승이면 여러 개). arr: 내릴 역 도착 시각, 모르면 없음 */
+export type RouteLeg = { line: string; from: string; to: string; dep: string; arr?: string; endName: string };
+
 export type Person = {
   name: string;
   station: string;
@@ -14,6 +17,8 @@ export type Person = {
   walk?: number; // 예전 저장값의 역까지 도보(분). 2026-11부터 쓰지 않는다 (길찾기는 지도 앱으로)
   origin?: StationRef;
   dest?: StationRef;
+  // 자동으로 찾았거나 목록에서 고른 막차의 경로 (직접 입력한 시각이면 없음). route[0].dep === train
+  route?: RouteLeg[];
 };
 
 export type PlanRow = Person & {

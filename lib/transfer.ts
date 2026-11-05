@@ -18,6 +18,13 @@ export const sameStation = (a: string, b: string) => nameVariants(a).some((x) =>
 /** 노선 이름 비교용: "신분당선"·"신분당", "공항철도"·"공항"을 같게 본다. N호선은 그대로. */
 export const normLine = (line: string) => (/^\d+호선$/.test(line) ? line : line.trim().replace(/(선|철도)$/, ''));
 
+/** 화면에 보여줄 노선 이름: TAGO "신분당"·"공항"과 카카오 "신분당선"·"공항철도"를 하나로 ("신분당선", "공항철도") */
+export const lineLabel = (line: string) => {
+  const t = line.trim();
+  if (/(호선|선|철도)$/.test(t) || !t) return t;
+  return t === '공항' ? '공항철도' : `${t}선`;
+};
+
 export type Leg = { line: string; from: string; to: string; minutes: number };
 /** walks[i]: i번째 구간을 타기 전 환승 도보(분). walks[0]은 0 (출발역 도보는 사람마다 따로 입력) */
 export type SubwayRoute = { legs: Leg[]; walks: number[] };

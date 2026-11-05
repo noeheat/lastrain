@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { serviceDay } from '@/lib/time';
+import { serviceDay, type RouteLeg } from '@/lib/time';
 import { dailyTypeCode } from '@/lib/reach';
 import type { PlanResult } from '@/lib/plan';
 import { hintClass } from './formStyles';
+import { lineLabel } from '@/lib/transfer';
 import { LastTrainField } from './LastTrainField';
 
 const DAY_LABEL = { '01': '평일', '02': '토요일', '03': '일요일·공휴일' } as const;
@@ -19,9 +20,12 @@ type Props = {
   dest: string;
   train: string;
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (TrainChoices와 같음)
-  onChoose: (time: string) => void;
+  onChoose: (time: string, route?: RouteLeg[]) => void; // route: 자동 막차와 같은 시각일 때 환승 경로
   invalid?: boolean;
 };
+
+const legsOf = (plan: PlanResult): RouteLeg[] =>
+  plan.legs.map(({ line, from, to, dep, arr, endName }) => ({ line: lineLabel(line), from, to, dep, arr, endName }));
 
 /** 노선이 달라 환승이 필요할 때: /api/plan으로 환승 막차를 받아 출발 시각을 채운다. 못 구하면 직접 입력. */
 export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid }: Props) {
@@ -30,8 +34,10 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid 
 
   // onChoose는 렌더마다 새 함수라, 최신 값을 ref로 들고 있다가 응답이 오면 부른다
   const onChooseRef = useRef(onChoose);
+  const trainRef = useRef(train);
   useEffect(() => {
     onChooseRef.current = onChoose;
+    trainRef.current = train;
   });
 
   useEffect(() => {
@@ -44,7 +50,7 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid 
         if (!res.ok || !body) throw new Error(body?.error ?? '환승 경로를 불러오지 못했어요.');
         const { plan, reasons = [] } = body as { plan: PlanResult | null; reasons?: string[] };
         setState({ status: 'done', plan, reasons });
-        if (autoFill && plan) onChooseRef.current(plan.depart);
+        if (plan && (autoFill || trainRef.current === plan.depart)) onChooseRef.current(plan.depart, legsOf(plan));
       } catch (e) {
         if (ctrl.signal.aborted) return;
         const offline = e instanceof TypeError; // fetch 자체 실패 = 네트워크 문제
@@ -54,7 +60,10 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid 
     return () => ctrl.abort();
   }, [origin, dest, daily, autoFill]);
 
-  const field = { train, onChange: onChoose, invalid };
+  const field = {
+    train, invalid,
+    onChange: (t: string) => onChoose(t, state.status === 'done' && state.plan?.depart === t ? legsOf(state.plan) : undefined),
+  };
   if (state.status === 'loading') return <LastTrainField {...field} status="loading" />;
   if (state.status === 'error' || !state.plan) {
     const note = state.status === 'error'
