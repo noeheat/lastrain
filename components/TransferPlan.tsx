@@ -18,6 +18,8 @@ type State =
 type Props = {
   origin: string; // 역 이름
   dest: string;
+  originLine?: string; // 이름이 같은 다른 역과 구분하려고 (TAGO 노선 이름)
+  destLine?: string;
   train: string;
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (TrainChoices와 같음)
   onChoose: (time: string, route?: RouteLeg[]) => void; // route: 자동 막차와 같은 시각일 때 환승 경로
@@ -28,7 +30,7 @@ const legsOf = (plan: PlanResult): RouteLeg[] =>
   plan.legs.map(({ line, from, to, dep, arr, endName }) => ({ line: lineLabel(line), from, to, dep, arr, endName }));
 
 /** 노선이 달라 환승이 필요할 때: /api/plan으로 환승 막차를 받아 출발 시각을 채운다. 못 구하면 직접 입력. */
-export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid }: Props) {
+export function TransferPlan({ origin, dest, originLine, destLine, train, autoFill, onChoose, invalid }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
   const daily = dailyTypeCode(serviceDay(new Date()));
 
@@ -45,7 +47,8 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid 
     setState({ status: 'loading' });
     (async () => {
       try {
-        const res = await fetch(`/api/plan?${new URLSearchParams({ origin, dest, daily })}`, { signal: ctrl.signal });
+        const qs = new URLSearchParams({ origin, dest, daily, ...(originLine && { originLine }), ...(destLine && { destLine }) });
+        const res = await fetch(`/api/plan?${qs}`, { signal: ctrl.signal });
         const body = await res.json().catch(() => null);
         if (!res.ok || !body) throw new Error(body?.error ?? '환승 경로를 불러오지 못했어요.');
         const { plan, reasons = [] } = body as { plan: PlanResult | null; reasons?: string[] };
@@ -58,7 +61,7 @@ export function TransferPlan({ origin, dest, train, autoFill, onChoose, invalid 
       }
     })();
     return () => ctrl.abort();
-  }, [origin, dest, daily, autoFill]);
+  }, [origin, dest, originLine, destLine, daily, autoFill]);
 
   const field = {
     train, invalid,

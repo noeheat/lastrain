@@ -1,7 +1,7 @@
 // 카카오 로컬(역 좌표)·대중교통 경로 호출 (서버 전용: REST 키를 쓰므로 app/api에서만 import한다)
 
-import { groupNearby, type NearbyStation } from './nearby';
-import { nameVariants } from './transfer';
+import { colocatedLines, groupNearby, parsePlaceName, type NearbyStation, type Place } from './nearby';
+import { nameVariants, normLine } from './transfer';
 
 const DAY = 60 * 60 * 24;
 
@@ -18,17 +18,36 @@ async function get(url: string, params: Record<string, string>) {
   return body;
 }
 
-/** 역 이름 → 좌표 (지하철역 카테고리). 못 찾으면 null */
-export async function stationCoord(name: string): Promise<{ x: string; y: string } | null> {
+/** 역 이름 → 노선별 카카오 좌표 ("강남역 2호선", "강남역 신분당선"). 이름 후보 중 처음 찾은 것 */
+async function stationPlaces(name: string): Promise<Place[]> {
   for (const n of nameVariants(name)) {
     const body = await get('https://dapi.kakao.com/v2/local/search/keyword.json', {
-      query: `${n}역`, category_group_code: 'SW8', size: '5',
+      query: `${n}역`, category_group_code: 'SW8', size: '15',
     });
-    // place_name 예: "강남역 2호선"
-    const hit = (body.documents ?? []).find((d: { place_name?: string }) => d.place_name?.startsWith(`${n}역`));
-    if (hit) return { x: hit.x, y: hit.y };
+    const places = (body.documents ?? []).flatMap((d: { place_name?: string; x?: string; y?: string }) => {
+      const p = parsePlaceName(d.place_name ?? '');
+      return p && p.name === n ? [{ line: p.line, x: Number(d.x), y: Number(d.y) }] : [];
+    });
+    if (places.length) return places;
   }
-  return null;
+  return [];
+}
+
+const sameLine = (a: string, b: string) => normLine(a) === normLine(b);
+
+/**
+ * 역 이름(과 노선) → 좌표. 노선을 주면 그 노선의 역을 쓴다 (양평: 5호선은 영등포구, 경의중앙선은 양평군).
+ * 노선이 없거나 못 찾으면 처음 찾은 역. 없으면 null
+ */
+export async function stationCoord(name: string, line?: string): Promise<{ x: string; y: string } | null> {
+  const places = await stationPlaces(name);
+  const hit = (line && places.find((p) => sameLine(p.line, line))) || places[0];
+  return hit ? { x: String(hit.x), y: String(hit.y) } : null;
+}
+
+/** 이름이 같은 역 중 고른 노선의 역과 같은 곳(500m 안)에 있는 노선들. 못 찾으면 null */
+export async function colocated(name: string, line: string): Promise<string[] | null> {
+  return colocatedLines(await stationPlaces(name), line, sameLine);
 }
 
 /** 두 좌표 사이 대중교통 경로 (응답 그대로, 해석은 lib/transfer.ts) */

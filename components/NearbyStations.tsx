@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { NearbyStation } from '@/lib/nearby';
-import type { Origin } from '@/lib/origin';
+import { colocatedOptions, type Origin } from '@/lib/origin';
 import type { StationRef } from '@/lib/time';
 import { nameVariants } from '@/lib/transfer';
 import { hintClass } from './formStyles';
@@ -53,14 +53,15 @@ export function NearbyStations({ onPick }: { onPick: (origin: Origin) => void })
     }
   }
 
-  async function pick(name: string) {
+  async function pick(name: string, lines: string[]) {
     setPicking(name);
     // 노선별 역 ID가 있어야 막차를 자동으로 찾으므로 역 검색으로 받는다. 실패하면 이름만 쓴다
     let options: StationRef[] = [];
     try {
       const res = await fetch(`/api/stations?q=${encodeURIComponent(name)}`);
       const body = await res.json().catch(() => null);
-      if (res.ok && body) options = (body.stations as StationRef[]).filter((s) => nameVariants(s.name).includes(name));
+      // 이름이 같아도 카카오가 이 위치에서 알려준 노선만 (양평: 5호선·경의중앙선은 다른 역)
+      if (res.ok && body) options = colocatedOptions((body.stations as StationRef[]).filter((s) => nameVariants(s.name).includes(name)), lines);
     } catch { /* 이름만 쓴다 */ }
     setPicking('');
     onPick({ text: options[0]?.name ?? name, options });
@@ -87,7 +88,7 @@ export function NearbyStations({ onPick }: { onPick: (origin: Origin) => void })
               <li key={s.name} className="border-t border-[var(--border)] first:border-t-0">
                 <button
                   type="button"
-                  onClick={() => pick(s.name)}
+                  onClick={() => pick(s.name, s.lines)}
                   disabled={!!picking}
                   className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-left"
                 >

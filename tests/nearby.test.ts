@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { groupNearby, parsePlaceName } from '../lib/nearby';
+import { colocatedLines, distanceM, groupNearby, parsePlaceName } from '../lib/nearby';
 
 test('parsePlaceName: "강남역 2호선" → 이름·노선, 형식이 다르면 null', () => {
   assert.deepEqual(parsePlaceName('강남역 2호선'), { name: '강남', line: '2호선' });
@@ -21,4 +21,22 @@ test('groupNearby: 역 이름별로 묶고 가까운 순 최대 5곳, 거리는 
   assert.deepEqual(r.map((s) => `${s.name}:${s.lines.join('·')}:${s.distance}`), [
     '강남:2호선·신분당선:40', '신논현:신분당선·9호선:677', '역삼:2호선:842', '언주:9호선:1188', '교대:2호선:1250',
   ]);
+});
+
+// 카카오 "역" 검색 결과 좌표 (2026-11)
+test('colocatedLines: 이름이 같아도 500m 넘게 떨어진 역은 다른 역', () => {
+  const same = (a: string, b: string) => a.replace(/(선|철도)$/, '') === b.replace(/(선|철도)$/, '');
+  const yangpyeong = [{ line: '5호선', x: 126.8864, y: 37.5256 }, { line: '경의중앙선', x: 127.4922, y: 37.4927 }];
+  assert.deepEqual(colocatedLines(yangpyeong, '경의중앙', same), ['경의중앙선']);
+  assert.deepEqual(colocatedLines(yangpyeong, '5호선', same), ['5호선']);
+  const gangnam = [{ line: '2호선', x: 127.028, y: 37.4981 }, { line: '신분당선', x: 127.0282, y: 37.4968 }];
+  assert.deepEqual(colocatedLines(gangnam, '신분당', same), ['2호선', '신분당선']);
+  const sinchon = [{ line: '2호선', x: 126.937, y: 37.5552 }, { line: '경의중앙선', x: 126.9421, y: 37.5597 }];
+  assert.deepEqual(colocatedLines(sinchon, '2호선', same), ['2호선']);
+  assert.equal(colocatedLines(gangnam, '9호선', same), null);
+});
+
+test('distanceM: 강남 2호선↔신분당선 약 145m', () => {
+  const d = distanceM({ x: 127.028, y: 37.4981 }, { x: 127.0282, y: 37.4968 });
+  assert.ok(d > 130 && d < 160, String(d));
 });

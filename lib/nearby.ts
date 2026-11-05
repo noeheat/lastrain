@@ -29,3 +29,25 @@ export function groupNearby(places: KakaoPlace[]): NearbyStation[] {
   }
   return [...byName.values()].sort((a, b) => a.distance - b.distance).slice(0, MAX_STATIONS);
 }
+
+export type Place = { line: string; x: number; y: number }; // 카카오 좌표 (x 경도, y 위도)
+
+const MAX_SAME_STATION_M = 500; // 같은 이름 역을 한 역으로 볼 거리. 신촌 2호선·경의중앙선(약 670m)은 다른 역
+
+/** 두 좌표 사이 거리(m) */
+export function distanceM(a: { x: number; y: number }, b: { x: number; y: number }): number {
+  const R = 6_371_000, rad = Math.PI / 180;
+  const dLat = (b.y - a.y) * rad, dLng = (b.x - a.x) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.y * rad) * Math.cos(b.y * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * 이름이 같은 역 중 고른 노선(line)의 역과 같은 곳(500m 안)에 있는 노선들. 고른 노선을 못 찾으면 null.
+ * 양평(5호선 영등포구·경의중앙선 양평군)처럼 이름만 같은 다른 역을 갈라낸다. same: 노선 이름 비교 (TAGO·카카오 표기 차이)
+ */
+export function colocatedLines(places: Place[], line: string, same: (a: string, b: string) => boolean): string[] | null {
+  const base = places.find((p) => same(p.line, line));
+  if (!base) return null;
+  return places.filter((p) => distanceM(base, p) <= MAX_SAME_STATION_M).map((p) => p.line);
+}

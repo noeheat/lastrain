@@ -34,9 +34,10 @@ async function legTrains(leg: Leg, daily: Daily): Promise<LegTrain[] | null> {
  * reasons: 경로를 버린 이유 (plan이 null일 때 화면에 원인을 보여주려고)
  */
 export async function planTransfer(
-  origin: string, dest: string, daily: Daily,
+  origin: string, dest: string, daily: Daily, originLine?: string, destLine?: string,
 ): Promise<{ plan: PlanResult | null; routes: number; reasons: string[] }> {
-  const [a, b] = await Promise.all([stationCoord(origin), stationCoord(dest)]);
+  // 노선도 넘겨 이름이 같은 다른 역(양평: 5호선·경의중앙선)과 헷갈리지 않게 한다
+  const [a, b] = await Promise.all([stationCoord(origin, originLine), stationCoord(dest, destLine)]);
   if (!a || !b) return { plan: null, routes: 0, reasons: ['역 위치를 찾지 못했어요'] };
   const routes = subwayRoutes(await transitRoutes(a, b), origin, dest).slice(0, MAX_ROUTES);
   const reasons = new Set<string>();

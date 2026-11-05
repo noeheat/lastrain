@@ -53,13 +53,21 @@ export const PlanQuerySchema = z
     origin: z.string().trim().min(1).max(30),
     dest: z.string().trim().min(1).max(30),
     daily: z.enum(['01', '02', '03']),
+    // 이름이 같은 다른 역과 구분하려고 (TAGO 노선 이름). 없으면 이름으로만 찾는다
+    originLine: z.string().trim().min(1).max(20).optional(),
+    destLine: z.string().trim().min(1).max(20).optional(),
   })
-  .refine((v) => v.origin !== v.dest, '출발역과 도착역이 같아요');
+  .refine((v) => v.origin !== v.dest || (v.originLine && v.destLine && v.originLine !== v.destLine), '출발역과 도착역이 같아요');
 
 // 현재 위치 (한국 범위만)
 export const NearbyQuerySchema = z.object({
   lat: z.coerce.number().min(33).max(39),
   lng: z.coerce.number().min(124).max(132),
+});
+
+export const StationLinesQuerySchema = z.object({
+  name: z.string().trim().min(1).max(30),
+  line: z.string().trim().min(1).max(20),
 });
 
 export const StationQuerySchema = z.object({

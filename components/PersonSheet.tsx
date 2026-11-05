@@ -79,7 +79,8 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
       {from && d.dest ? (
         <TrainChoices origin={from} dest={d.dest} train={d.train} autoFill={autoFill} onChoose={onTrain} invalid={trainInvalid} />
       ) : origin.options.length > 0 && d.dest ? (
-        <TransferPlan origin={origin.options[0]!.name} dest={d.dest.name} train={d.train} autoFill={autoFill}
+        <TransferPlan origin={origin.options[0]!.name} dest={d.dest.name} originLine={origin.options[0]!.line} destLine={d.dest.line}
+          train={d.train} autoFill={autoFill}
           onChoose={onTrain} invalid={trainInvalid} />
       ) : (
         <LastTrainField train={d.train} onChange={onTrain} status="idle" invalid={trainInvalid}

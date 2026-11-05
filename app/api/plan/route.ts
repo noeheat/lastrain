@@ -1,4 +1,4 @@
-// GET /api/plan?origin=<역 이름>&dest=<역 이름>&daily=01|02|03 → { plan: PlanResult | null, routes }
+// GET /api/plan?origin=<역 이름>&dest=<역 이름>&daily=01|02|03[&originLine=&destLine=] → { plan: PlanResult | null, routes }
 // 노선이 달라 환승이 필요할 때 쓴다. daily는 클라이언트가 운행일 기준으로 보낸다 (/api/last-train과 같음)
 
 import type { NextRequest } from 'next/server';
@@ -11,11 +11,14 @@ export async function GET(req: NextRequest) {
   const limited = rateLimit(req, 'plan');
   if (limited) return limited;
   const sp = req.nextUrl.searchParams;
-  const parsed = PlanQuerySchema.safeParse({ origin: sp.get('origin'), dest: sp.get('dest'), daily: sp.get('daily') });
+  const parsed = PlanQuerySchema.safeParse({
+    origin: sp.get('origin'), dest: sp.get('dest'), daily: sp.get('daily'),
+    originLine: sp.get('originLine') ?? undefined, destLine: sp.get('destLine') ?? undefined,
+  });
   if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? '잘못된 요청이에요' }, 400);
-  const { origin, dest, daily } = parsed.data;
+  const { origin, dest, daily, originLine, destLine } = parsed.data;
   try {
-    return json(await planTransfer(origin, dest, daily));
+    return json(await planTransfer(origin, dest, daily, originLine, destLine));
   } catch (e) {
     console.error(e);
     const config = e instanceof Error && e.message.includes('설정되지 않았어요');

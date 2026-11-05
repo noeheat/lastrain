@@ -3,6 +3,7 @@
 // 사람마다 도착역 노선에 맞는 역을 쓴다.
 
 import type { Person, StationRef } from './time';
+import { normLine } from './transfer';
 
 export type Origin = { text: string; options: StationRef[] }; // options: 검색으로 고르지 않았으면 빈 배열
 
@@ -23,3 +24,12 @@ export const pairKey = (o: Origin, dest: StationRef | null) => `${originFor(o, d
 
 /** 저장한 뒤 출발역이 바뀌어 막차가 맞지 않는 사람 */
 export const isStale = (p: Person, o: Origin) => p.station !== o.text;
+
+/**
+ * 같은 이름의 역 중 같은 곳에 있는 노선만 (lines: 카카오 노선 이름, 예: ["2호선", "신분당선"]).
+ * 양평처럼 이름만 같고 멀리 떨어진 역(5호선·경의중앙선)이 한 출발역으로 묶이지 않게 한다
+ */
+export function colocatedOptions(options: StationRef[], lines: string[]): StationRef[] {
+  const keep = new Set(lines.map(normLine));
+  return options.filter((o) => keep.has(normLine(o.line)));
+}

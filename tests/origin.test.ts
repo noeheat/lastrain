@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { isStale, originFor, originFromPeople, pairKey } from '../lib/origin';
+import { colocatedOptions, isStale, originFor, originFromPeople, pairKey } from '../lib/origin';
 import { SavedSchema } from '../lib/schema';
 import type { Person } from '../lib/time';
 
@@ -46,4 +46,12 @@ test('SavedSchema: 막차 경로(route)를 저장하고 읽는다, 잘못된 시
   ];
   assert.ok(SavedSchema.safeParse({ people: [person({ train: '00:23', route })] }).success);
   assert.equal(SavedSchema.safeParse({ people: [person({ route: [{ ...route[0]!, dep: '25:00' }] })] }).success, false);
+});
+
+test('colocatedOptions: 카카오가 같은 곳이라고 한 노선만 남긴다 (표기 차이 무시)', () => {
+  const y5 = { id: 'MTRS152523', name: '양평', line: '5호선' };
+  const yk = { id: 'MTRKRK4K135', name: '양평', line: '경의중앙' };
+  assert.deepEqual(colocatedOptions([y5, yk], ['경의중앙선']), [yk]);
+  assert.deepEqual(colocatedOptions([s2, sb], ['2호선', '신분당선']), [s2, sb]);
+  assert.deepEqual(colocatedOptions([s2, sb], []), []);
 });

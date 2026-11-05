@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { parseHHMM, type Person } from '@/lib/time';
+import { parseHHMM, type Person, type StationRef } from '@/lib/time';
 import { SavedSchema } from '@/lib/schema';
-import { EMPTY_ORIGIN, originFromPeople, type Origin } from '@/lib/origin';
+import { EMPTY_ORIGIN, colocatedOptions, originFromPeople, type Origin } from '@/lib/origin';
 import { Countdown } from './Countdown';
 import { Sheet } from './Sheet';
 import { PersonSheet } from './PersonSheet';
@@ -97,6 +97,22 @@ export function LastTrainApp() {
 /** 출발역 시트: 현재 위치 근처 역을 고르거나(바로 저장), 검색해서 고르거나, 검색이 안 되면 입력한 이름 그대로 쓴다 */
 function OriginForm({ initial, onSave }: { initial: Origin; onSave: (o: Origin) => void }) {
   const [o, setO] = useState<Origin>(initial);
+
+  // 고른 노선의 역만 먼저 담고, 같은 곳(500m 안)에 있는 같은 이름 노선을 확인되면 더한다.
+  // 확인 전에 저장하거나 실패해도 이름만 같은 다른 역(양평 5호선·경의중앙선)이 섞이지 않는다
+  async function pick(s: StationRef, results: StationRef[]) {
+    setO({ text: s.name, options: [s] });
+    const sameName = results.filter((r) => r.name === s.name);
+    if (sameName.length < 2) return;
+    try {
+      const res = await fetch(`/api/station-lines?${new URLSearchParams({ name: s.name, line: s.line })}`);
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body?.lines) return;
+      const options = colocatedOptions(sameName, body.lines as string[]);
+      // 그 사이 다른 역을 골랐으면 덮어쓰지 않는다
+      if (options.some((x) => x.id === s.id)) setO((cur) => (cur.options[0]?.id === s.id ? { text: s.name, options } : cur));
+    } catch { /* 고른 노선만 쓴다 */ }
+  }
   const [error, setError] = useState('');
   return (
     <form
@@ -116,7 +132,7 @@ function OriginForm({ initial, onSave }: { initial: Origin; onSave: (o: Origin) 
         badge={o.options.map((s) => s.line).join(' · ')}
         invalid={!!error}
         onText={(text) => { setO({ text, options: [] }); setError(''); }}
-        onPick={(s, results) => setO({ text: s.name, options: results.filter((r) => r.name === s.name) })}
+        onPick={(s, results) => pick(s, results)}
       />
       <p role="alert" className="mb-3 min-h-[1.2em] text-[0.9rem] text-[var(--error)]">{error}</p>
       <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-[var(--accent)] text-[1.05rem] font-semibold text-[#06121f]">
