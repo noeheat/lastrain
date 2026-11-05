@@ -8,6 +8,7 @@ import { Countdown } from './Countdown';
 import { Sheet } from './Sheet';
 import { PersonSheet } from './PersonSheet';
 import { StationPicker } from './StationPicker';
+import { NearbyStations } from './NearbyStations';
 
 const KEY = 'lastTrain.v1';
 
@@ -93,7 +94,7 @@ export function LastTrainApp() {
   );
 }
 
-/** 출발역 시트: 검색해서 고르거나, 검색이 안 되면 입력한 이름 그대로 쓴다 */
+/** 출발역 시트: 현재 위치 근처 역을 고르거나(바로 저장), 검색해서 고르거나, 검색이 안 되면 입력한 이름 그대로 쓴다 */
 function OriginForm({ initial, onSave }: { initial: Origin; onSave: (o: Origin) => void }) {
   const [o, setO] = useState<Origin>(initial);
   const [error, setError] = useState('');
@@ -107,8 +108,9 @@ function OriginForm({ initial, onSave }: { initial: Origin; onSave: (o: Origin) 
         onSave({ ...o, text });
       }}
     >
+      <NearbyStations onPick={onSave} />
       <StationPicker
-        label="역 이름"
+        label="또는 역 이름으로 검색"
         text={o.text}
         picked={o.options[0] ?? null}
         badge={o.options.map((s) => s.line).join(' · ')}

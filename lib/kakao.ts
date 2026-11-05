@@ -1,5 +1,6 @@
 // 카카오 로컬(역 좌표)·대중교통 경로 호출 (서버 전용: REST 키를 쓰므로 app/api에서만 import한다)
 
+import { groupNearby, type NearbyStation } from './nearby';
 import { nameVariants } from './transfer';
 
 const DAY = 60 * 60 * 24;
@@ -33,4 +34,15 @@ export async function stationCoord(name: string): Promise<{ x: string; y: string
 /** 두 좌표 사이 대중교통 경로 (응답 그대로, 해석은 lib/transfer.ts) */
 export function transitRoutes(a: { x: string; y: string }, b: { x: string; y: string }) {
   return get('https://dapi.kakao.com/v2/routing/publictraffic', { start_x: a.x, start_y: a.y, end_x: b.x, end_y: b.y });
+}
+
+/**
+ * 좌표 근처(1.5km) 지하철역을 거리순으로. 좌표는 소수점 셋째 자리(약 100m)로 줄여 보낸다
+ * (위치를 덜 정확하게 넘기고, 같은 동네 요청끼리 캐시를 함께 쓴다)
+ */
+export async function nearbyStations(lat: number, lng: number): Promise<NearbyStation[]> {
+  const body = await get('https://dapi.kakao.com/v2/local/search/category.json', {
+    category_group_code: 'SW8', x: lng.toFixed(3), y: lat.toFixed(3), radius: '1500', sort: 'distance', size: '15',
+  });
+  return groupNearby(body.documents ?? []);
 }
