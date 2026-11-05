@@ -98,7 +98,8 @@
 
 ### 품질·배포
 13. ~~API 호출 제한~~ — 11-05 `lib/rateLimit.ts`: IP별 1분 고정 윈도(역 검색 60, 같은 노선 30, 환승 15회), 넘으면 429 + `Retry-After`. 메모리라 Vercel 인스턴스마다 따로 센다. Preview에서 16번째부터 429, 클라이언트가 `x-real-ip`·`x-forwarded-for`를 위조해도 429(Vercel이 덮어씀) 확인. 남은 것: 더 엄격하게 하려면 Upstash Redis(외부 서비스, 확인 필요).
-14. **서비스 워커와 PWA를 HTTPS 주소에서 확인하지 않았다.** 로컬 브라우저 패널에서는 등록이 안 됐다.
+14. **서비스 워커·PWA** — 11-05 Preview(HTTPS)에서 확인: 서비스 워커 등록·활성(페이지 제어 중), manifest(`application/manifest+json`)·아이콘 3개 200, `sw.js`는 `max-age=0`이라 배포하면 바로 갱신된다. 새로고침 뒤 페이지가 쓰는 `/_next` 파일 6개가 모두 캐시에 있다(빠진 1개는 구형 브라우저용 `nomodule` 폴리필).
+   - 남은 것: **휴대폰에서 직접** 홈 화면 추가(iOS Safari·Android Chrome)와 비행기 모드에서 다시 열기. 브라우저 패널은 네트워크를 끊을 수 없어 확인하지 못했다.
 15. **배포 정리**
     - `main`에 Next.js 코드가 들어가 GitHub Pages(v1)가 404다.
     - `v2/nextjs`를 `main`에 합칠지, Production 배포를 어떻게 할지 정해야 한다.
