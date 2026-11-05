@@ -31,7 +31,8 @@
 ## 프로젝트 구조
 v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·DB 없음(Supabase 미사용).
 - `app/`: `page.tsx`(화면), `layout.tsx`, `manifest.ts`(PWA), 이후 `api/`(카카오·TAGO 키를 숨기는 서버 라우트)
-- `components/`: `LastTrainApp`(화면 전환·localStorage `lastTrain.v1`·`?now=HH:MM` 디버그), `SetupForm`, `Countdown`, `ServiceWorker`
+- `components/`: `LastTrainApp`(출발역·사람 목록 상태, localStorage `lastTrain.v1`, 시트 열기, `?now=HH:MM` 디버그), `Countdown`(홈: 출발역·카운트다운·사람 카드), `Sheet`(아래에서 올라오는 `<dialog>`), `PersonSheet`(한 사람 편집), `StationPicker`·`TrainChoices`·`TransferPlan`, `ServiceWorker`
+- `lib/origin.ts`: 함께 출발하는 역(노선별 역 목록), 출발역이 바뀐 사람 판정(`isStale`)
 - `lib/time.ts`: 순수 시간 로직 — 운행일 경계 04:00, 출발 = 막차 − 도보 − 5분, 색 단계
 - `lib/holidays.ts`: 공휴일 목록(2026~2028, 천문연구원 월력요항). 공휴일이면 `dailyTypeCode`가 휴일(03)
 - `lib/rateLimit.ts`: API 호출 제한(IP별 1분, 메모리). 각 `app/api/*/route.ts` 첫 줄에서 `rateLimit(req, '<라우트>')`

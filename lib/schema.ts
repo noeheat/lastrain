@@ -19,8 +19,18 @@ export const PersonSchema = z.object({
   dest: StationSchema.optional(),
 });
 
+export const MAX_PEOPLE = 6;
+
+// 함께 출발하는 역: 입력한 이름과, 검색으로 골랐다면 그 이름의 노선별 역 (강남: 2호선·신분당)
+export const OriginSchema = z.object({
+  text: z.string().trim().max(30),
+  options: z.array(StationSchema).max(10),
+});
+
+// origin이 없는 저장값(2명 고정이던 때)은 사람들의 출발역에서 다시 만든다
 export const SavedSchema = z.object({
-  people: z.array(PersonSchema).length(2),
+  origin: OriginSchema.optional(),
+  people: z.array(PersonSchema).max(MAX_PEOPLE),
 });
 
 export type Saved = z.infer<typeof SavedSchema>;

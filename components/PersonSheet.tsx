@@ -1,0 +1,97 @@
+'use client';
+
+import { useState } from 'react';
+import type { Person, StationRef } from '@/lib/time';
+import { PersonSchema } from '@/lib/schema';
+import { originFor, pairKey, type Origin } from '@/lib/origin';
+import { StationPicker } from './StationPicker';
+import { TrainChoices } from './TrainChoices';
+import { TransferPlan } from './TransferPlan';
+import { inputClass, labelClass } from './formStyles';
+
+// destText는 입력칸 글자, dest는 검색 결과에서 고른 역 (고르지 않았으면 null)
+type Draft = { name: string; destText: string; train: string; walk: string; dest: StationRef | null };
+type TextKey = 'name' | 'train' | 'walk';
+
+const toDraft = (p: Person | null): Draft =>
+  p
+    ? { name: p.name, train: p.train, walk: String(p.walk), dest: p.dest ?? null, destText: p.dest?.name ?? '' }
+    : { name: '', destText: '', train: '', walk: '', dest: null };
+
+// 저장할 때의 출발역·도착역. 지금 출발역과 다르면(출발역이 바뀜) 막차를 자동으로 다시 채운다
+const savedPair = (p: Person | null) => (p ? `${p.origin?.id ?? p.station}>${p.dest?.id ?? ''}` : '');
+
+type Props = {
+  origin: Origin;
+  person: Person | null; // null이면 새 사람
+  onSave: (person: Person) => void;
+  onDelete?: () => void;
+};
+
+/** 한 사람의 이름·도착역·막차·도보를 고치는 시트 내용. 저장할 때 검증한다 */
+export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
+  const [d, setD] = useState<Draft>(() => toDraft(person));
+  const [invalid, setInvalid] = useState<Set<string>>(new Set());
+  const [error, setError] = useState('');
+  const update = (patch: Partial<Draft>) => setD((x) => ({ ...x, ...patch }));
+
+  const from = originFor(origin, d.dest);
+  const autoFill = pairKey(origin, d.dest) !== savedPair(person);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const parsed = PersonSchema.safeParse({
+      name: d.name, station: origin.text, train: d.train,
+      walk: d.walk === '' ? NaN : Number(d.walk),
+      origin: from ?? undefined, dest: d.dest ?? undefined,
+    });
+    if (!parsed.success) {
+      setInvalid(new Set(parsed.error.issues.map((i) => String(i.path[0]))));
+      setError('빈칸이나 잘못된 값이 있어요. 도보 시간은 0~180분입니다.');
+      return;
+    }
+    onSave(parsed.data);
+  }
+
+  const field = (key: TextKey) => ({
+    value: d[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => update({ [key]: e.target.value }),
+    'aria-invalid': invalid.has(key),
+    className: inputClass,
+  });
+  const trainField = <label className={labelClass}>막차 시각 <input {...field('train')} type="time" /></label>;
+
+  return (
+    <form onSubmit={submit} noValidate>
+      <label className={labelClass}>이름 <input {...field('name')} autoComplete="off" maxLength={20} /></label>
+      <StationPicker
+        label="도착역 (집 근처 역)"
+        text={d.destText}
+        picked={d.dest}
+        onText={(destText) => update({ destText, dest: null })}
+        onPick={(dest) => update({ destText: dest.name, dest })}
+      />
+      {from && d.dest ? (
+        <TrainChoices origin={from} dest={d.dest} train={d.train} autoFill={autoFill}
+          onChoose={(train) => update({ train })} manualField={trainField} />
+      ) : origin.options.length > 0 && d.dest ? (
+        <TransferPlan origin={origin.options[0]!.name} dest={d.dest.name} train={d.train} autoFill={autoFill}
+          onChoose={(train) => update({ train })} manualField={trainField} />
+      ) : (
+        trainField
+      )}
+      <label className={labelClass}>
+        역까지 도보(분) <input {...field('walk')} type="number" inputMode="numeric" min={0} max={180} />
+      </label>
+      <p role="alert" className="mb-3 min-h-[1.2em] text-[0.9rem] text-[var(--error)]">{error}</p>
+      <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-[var(--accent)] text-[1.05rem] font-semibold text-[#06121f]">
+        저장
+      </button>
+      {onDelete && (
+        <button type="button" onClick={onDelete} className="mt-2 block min-h-12 w-full rounded-xl text-[0.95rem] text-[var(--error)]">
+          이 사람 삭제
+        </button>
+      )}
+    </form>
+  );
+}
