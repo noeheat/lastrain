@@ -7,6 +7,7 @@
 export function nameVariants(name: string): string[] {
   const raw = name.trim();
   const n = raw.replace(/역$/, '');
+  if (!n && raw) return [raw]; // "역"만 있으면 떼고 남는 빈 문자열은 후보에서 뺀다
   const m = /^(.+?)\((.+)\)$/.exec(n);
   const list = m ? [n, m[1]!, m[2]!] : [n];
   // "서울역"은 '역'까지가 이름이다. 서울 시간표에서 "서울"로 찾으면 GTX-A만 나오므로 원래 이름도 마지막에 찾는다

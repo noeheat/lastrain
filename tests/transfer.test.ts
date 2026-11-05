@@ -7,6 +7,8 @@ test('nameVariants·sameStation: 괄호 표기와 "역" 접미사', () => {
   assert.deepEqual(nameVariants('강남역'), ['강남', '강남역']);
   assert.deepEqual(nameVariants('서울역'), ['서울', '서울역']); // 서울 시간표 표기는 "서울역"
   assert.deepEqual(nameVariants('불암산(당고개)'), ['불암산(당고개)', '불암산', '당고개']);
+  assert.ok(!nameVariants('역').includes('')); // '역'을 떼서 빈 문자열이 되면 후보에서 뺀다
+  assert.deepEqual(nameVariants('역'), ['역']);
   assert.ok(sameStation('총신대입구(이수)', '이수'));
   assert.ok(sameStation('잠실', '잠실(송파구청)'));
   assert.ok(!sameStation('잠실', '잠실새내'));
