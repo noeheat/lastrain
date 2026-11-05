@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { serviceDay } from '../lib/time';
-import { parseTagoTime, toTrains, dailyTypeCode, position, findLastTrain, type RawRow, type RouteInput } from '../lib/reach';
+import { parseTagoTime, toTrains, dailyTypeCode, position, positioner, findLastTrain, reachingTrainList, type RawRow, type RouteInput } from '../lib/reach';
 
 // 실제 TAGO 응답(2026-10 평일)에서 막차 쪽만 옮겨 적은 값
 const row = (depTime: string, endSubwayStationId: string, endSubwayStationNm = ''): RawRow =>
@@ -142,4 +142,38 @@ test('종착역 방향이 섞인 방향은 쓰지 않는다 (구로→창동, �
     D: [],
   }, { U: ['MTRKR1110', 'MTRKR1159'], D: [] }));
   assert.equal(r, null);
+});
+
+// 경의중앙선(MTRKRK4): 번호가 경의선 K3xx, 중앙선 K1xx, 왕십리·청량리 K2xx로 섞여 있다 (TAGO, 2026-11)
+const KR4 = 'MTRKRK4';
+const K = (n: string) => `${KR4}${n}`;
+const 문산 = K('K335'), 일산 = K('K326'), 가좌 = K('K315'), 홍대입구 = K('K314'), 용산 = K('K110');
+const 왕십리 = K('K210'), 청량리 = K('K209'), 덕소 = K('K126'), 용문 = K('K137'), 서울역 = K('P313');
+
+test('positioner: 경의중앙선은 실제 정차 순서로 비교 (왕십리 K210이 청량리 K209보다 문산 쪽)', () => {
+  const pos = positioner(KR4, 덕소, 왕십리);
+  const n = (id: string) => pos(id)!.n;
+  assert.ok(n(문산) < n(용산) && n(용산) < n(왕십리) && n(왕십리) < n(청량리) && n(청량리) < n(덕소) && n(덕소) < n(용문));
+  // 서울역 지선: 서울역↔가좌를 함께 담은 목록은 지선 쪽. 본선 역(홍대입구)은 그 목록 밖이라 판정 불가
+  const branch = positioner(KR4, 서울역, 가좌);
+  assert.ok(branch(서울역)!.n < branch(가좌)!.n);
+  assert.equal(branch(홍대입구), null);
+  // 순서표가 없는 노선은 지금처럼 번호
+  assert.deepEqual(positioner('MTRS12', 'MTRS12222', 'MTRS12239')('MTRS12239'), { prefix: '', n: 239 });
+});
+
+test('경의중앙 덕소→왕십리: 문산·용산·일산행은 가고, 청량리행은 왕십리 전에서 끝난다', () => {
+  const trains = reachingTrainList(route(KR4, 덕소, 왕십리, {
+    U: [row('230100', 용산, '용산'), row('231700', 청량리, '청량리'), row('232000', 문산, '문산'), row('234400', 일산, '일산')],
+    D: [row('231200', 용문, '용문')],
+  }, { U: [용산, 문산, 일산], D: [용문] }));
+  assert.deepEqual(trains.map((t) => `${t.time} ${t.endName}`), ['23:01 용산', '23:20 문산', '23:44 일산']);
+});
+
+test('경의중앙 일산→홍대입구: 서울역행(신촌 경유)은 홍대입구에 안 가고, 용산행은 간다', () => {
+  const trains = reachingTrainList(route(KR4, 일산, 홍대입구, {
+    U: [row('230000', 서울역, '서울역'), row('231000', 용산, '용산'), row('232000', 덕소, '덕소')],
+    D: [row('231500', 문산, '문산')],
+  }, { U: [용산, 덕소], D: [문산] }));
+  assert.deepEqual(trains.map((t) => t.endName), ['용산', '덕소']);
 });

@@ -78,6 +78,38 @@ export function position(id: string, routeId: string): Pos | null {
   return m ? { prefix: m[1]!, n: Number(m[2]) } : null;
 }
 
+// 역 번호가 운행 순서와 다른 노선: 실제 정차 순서 (노선 ID 뒤 부분). 출발역·도착역이 둘 다 든 목록의 순서로 비교한다.
+// 경의중앙선은 경의선 쪽 K3xx, 중앙선 쪽 K1xx, 왕십리·청량리만 K2xx라 번호로는 방향을 알 수 없다.
+// spike/line-order.js로 카카오 일반열차 정차역을 TAGO 역 ID로 바꿔 뽑았다 (2026-11).
+const KR4_WEST = ['K335', 'K334', 'K333', 'K331', 'K330', 'K329', 'K328', 'K327', 'K326', 'K325', 'K324', 'K323',
+  'K322', 'K321', 'K320', 'K319', 'K318', 'K317', 'K316', 'K315']; // 문산 → 가좌
+const ORDERS: Record<string, string[][]> = {
+  MTRKRK4: [
+    // 본선: 문산 → 가좌 → 홍대입구 → 공덕 → 용산 → 옥수 → 왕십리(K210) → 청량리(K209) → 회기 → 덕소 → 지평
+    [...KR4_WEST, 'K314', 'K313', 'K312', 'K311', 'K110', 'K111', 'K112', 'K113', 'K114', 'K115', 'K210', 'K209',
+      'K118', 'K119', 'K120', 'K121', 'K122', 'K123', 'K124', 'K125', 'K126', 'K127', 'K128', 'K129', 'K130', 'K131',
+      'K132', 'K133', 'K134', 'K135', 'K136', 'K137', 'K138'],
+    // 서울역 지선: 서울역(P313) → 신촌(P314) → 가좌에서 본선으로 → 문산
+    ['P313', 'P314', ...[...KR4_WEST].reverse()],
+  ],
+};
+
+/**
+ * 출발역·도착역 쌍에 맞는 "역 ID → 노선 안 위치" 함수. 순서표가 있는 노선은 둘 다 든 목록의 순서를 쓰고,
+ * 그런 목록이 없거나 목록 밖의 역이면 null (판정할 수 없음 → 안 간다)
+ */
+export function positioner(routeId: string, originId: string, destId: string): (id: string) => Pos | null {
+  const orders = ORDERS[routeId];
+  if (!orders) return (id) => position(id, routeId);
+  const key = (id: string) => (id.startsWith(routeId) ? id.slice(routeId.length) : '');
+  const order = orders.find((o) => o.includes(key(originId)) && o.includes(key(destId)));
+  if (!order) return () => null;
+  return (id) => {
+    const i = order.indexOf(key(id));
+    return i >= 0 ? { prefix: '', n: i } : null;
+  };
+}
+
 // 순환선: 번호 범위와 상행(U)일 때 번호가 커지는지(+1) 작아지는지(-1). 시간표로 확인한 값.
 const LOOPS: Record<string, { from: number; to: number; up: 1 | -1 }> = {
   MTRS12: { from: 201, to: 243, up: 1 },
@@ -97,12 +129,12 @@ function distance(a: Pos, b: Pos, sign: 1 | -1, routeId: string): number | null 
 }
 
 /** 그 방향 열차의 종착역이 모두 출발역 한쪽에 있으면 그 쪽(+1/-1), 섞였거나 모르면 null */
-function directionSign(dir: Dir, origin: Pos, trains: Train[], routeId: string): 1 | -1 | null {
+function directionSign(dir: Dir, origin: Pos, trains: Train[], routeId: string, pos: (id: string) => Pos | null): 1 | -1 | null {
   const loop = LOOPS[routeId];
   if (loop) return dir === 'U' ? loop.up : (-loop.up as 1 | -1);
   const signs = new Set<number>();
   for (const t of trains) {
-    const p = position(t.endId, routeId);
+    const p = pos(t.endId);
     if (p && p.prefix === origin.prefix && p.n !== origin.n) signs.add(Math.sign(p.n - origin.n));
   }
   return signs.size === 1 ? ([...signs][0] as 1 | -1) : null;
@@ -111,9 +143,10 @@ function directionSign(dir: Dir, origin: Pos, trains: Train[], routeId: string):
 /** 그 방향에서 도착역까지 가는 열차들. 이 방향으로 도착역에 못 가면 null */
 function reachingTrains(r: RouteInput, dir: Dir): { trains: Train[]; stops: number } | null {
   const all = r.origin[dir];
-  const o = position(r.originId, r.routeId);
-  const d = position(r.destId, r.routeId);
-  const sign = o && directionSign(dir, o, all, r.routeId);
+  const pos = positioner(r.routeId, r.originId, r.destId);
+  const o = pos(r.originId);
+  const d = pos(r.destId);
+  const sign = o && directionSign(dir, o, all, r.routeId, pos);
   const stops = o && d && sign != null ? distance(o, d, sign, r.routeId) : null;
   // 번호로 판정할 수 없어도 도착역이 종착인 열차는 확실히 간다
   if (stops == null) return { trains: all.filter((t) => t.endId === r.destId), stops: Infinity };
@@ -122,7 +155,7 @@ function reachingTrains(r: RouteInput, dir: Dir): { trains: Train[]; stops: numb
   const trains = all.filter((t) => {
     if (t.endId === r.destId) return true;
     if (!r.destEnds[dir].has(t.endId)) return false; // 지선 등: 도착역에 서지 않는 종착역
-    const e = position(t.endId, r.routeId);
+    const e = pos(t.endId);
     const toEnd = e && distance(o, e, sign, r.routeId);
     return toEnd != null && toEnd > stops;
   });
