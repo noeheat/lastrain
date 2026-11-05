@@ -7,6 +7,7 @@ import { originFor, pairKey, type Origin } from '@/lib/origin';
 import { StationPicker } from './StationPicker';
 import { TrainChoices } from './TrainChoices';
 import { TransferPlan } from './TransferPlan';
+import { LastTrainField } from './LastTrainField';
 import { inputClass, labelClass } from './formStyles';
 
 // destText는 입력칸 글자, dest는 검색 결과에서 고른 역 (고르지 않았으면 null)
@@ -59,7 +60,8 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
     'aria-invalid': invalid.has(key),
     className: inputClass,
   });
-  const trainField = <label className={labelClass}>막차 시각 <input {...field('train')} type="time" /></label>;
+  const onTrain = (train: string) => update({ train });
+  const trainInvalid = invalid.has('train');
 
   return (
     <form onSubmit={submit} noValidate>
@@ -72,13 +74,13 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
         onPick={(dest) => update({ destText: dest.name, dest })}
       />
       {from && d.dest ? (
-        <TrainChoices origin={from} dest={d.dest} train={d.train} autoFill={autoFill}
-          onChoose={(train) => update({ train })} manualField={trainField} />
+        <TrainChoices origin={from} dest={d.dest} train={d.train} autoFill={autoFill} onChoose={onTrain} invalid={trainInvalid} />
       ) : origin.options.length > 0 && d.dest ? (
         <TransferPlan origin={origin.options[0]!.name} dest={d.dest.name} train={d.train} autoFill={autoFill}
-          onChoose={(train) => update({ train })} manualField={trainField} />
+          onChoose={onTrain} invalid={trainInvalid} />
       ) : (
-        trainField
+        <LastTrainField train={d.train} onChange={onTrain} status="idle" invalid={trainInvalid}
+          note={d.dest || origin.options.length === 0 ? '역을 검색해서 고르지 않으면 막차 시각을 직접 입력해 주세요.' : '도착역을 검색해서 고르면 막차를 자동으로 찾아요.'} />
       )}
       <label className={labelClass}>
         역까지 도보(분) <input {...field('walk')} type="number" inputMode="numeric" min={0} max={180} />

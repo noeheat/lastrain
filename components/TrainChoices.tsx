@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { serviceDay, type StationRef } from '@/lib/time';
 import { dailyTypeCode, type LastTrainResult, type Train } from '@/lib/reach';
-import { hintClass } from './formStyles';
+import { LastTrainField } from './LastTrainField';
 
 const DAY_LABEL = { '01': '평일', '02': '토요일', '03': '일요일·공휴일' } as const;
 
@@ -18,13 +18,12 @@ type Props = {
   train: string; // 지금 입력된 막차 시각 (선택 표시용)
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (수정 화면에서 직접 고친 값 보호)
   onChoose: (time: string) => void;
-  manualField: React.ReactNode; // 막차 시각 직접 입력칸 (필요할 때만 보여준다)
+  invalid?: boolean;
 };
 
 /** 출발역→도착역 막차를 /api/last-train에서 받아 자동으로 채우고, 다른 열차도 고를 수 있게 보여준다. */
-export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualField }: Props) {
+export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
-  const [manualOpen, setManualOpen] = useState(false);
   const daily = dailyTypeCode(serviceDay(new Date()));
 
   // onChoose는 렌더마다 새 함수라, 최신 값을 ref로 들고 있다가 응답이 오면 부른다
@@ -36,7 +35,6 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
   useEffect(() => {
     const ctrl = new AbortController();
     setState({ status: 'loading' });
-    setManualOpen(false);
     (async () => {
       try {
         const qs = new URLSearchParams({
@@ -56,14 +54,10 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
     return () => ctrl.abort();
   }, [origin.id, dest.id, daily, autoFill]);
 
-  if (state.status === 'loading') return <p className={`${hintClass} mb-3 text-[var(--muted)]`}>막차 찾는 중…</p>;
+  const field = { train, onChange: onChoose, invalid };
+  if (state.status === 'loading') return <LastTrainField {...field} status="loading" />;
   if (state.status === 'error') {
-    return (
-      <>
-        <p className={`${hintClass} mb-3 text-[var(--error)]`}>{state.message} 막차 시각을 직접 입력해 주세요.</p>
-        {manualField}
-      </>
-    );
+    return <LastTrainField {...field} status="idle" note={`${state.message} 막차 시각을 직접 입력해 주세요.`} noteIsError />;
   }
 
   const { last, candidates } = state.result;
@@ -74,40 +68,30 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, manualFi
   const list: Train[] = last
     ? [...candidates[last.dir].filter((t) => t.min < last.min).slice(-3), last]
     : [...candidates.U, ...candidates.D].sort((a, b) => a.min - b.min);
-  // 자동 막차가 없거나 지금 값이 목록에 없으면(직접 고친 값, 이전 역의 값) 입력칸을 숨기지 않는다
-  const mustShowManual = !last || !list.some((t) => t.time === train);
+
+  const chips = (
+    <div className="flex flex-wrap gap-1.5">
+      {list.map((t) => (
+        <button
+          key={`${t.min}-${t.endId}`}
+          type="button"
+          onClick={() => onChoose(t.time)}
+          aria-pressed={t.time === train}
+          className="min-h-9 rounded-full border border-[var(--border)] px-3 text-[0.85rem] text-[var(--text)] aria-pressed:border-[var(--accent)] aria-pressed:text-[var(--accent)]"
+        >
+          {t.time} {t.endName}행{t === last ? ' · 막차' : ''}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <div className="mb-3">
-      <p className={`${hintClass} text-[var(--muted)]`}>
-        {last
-          ? `${dest.name}까지 막차는 ${last.time} ${last.endName}행이에요 (${dayNote}).`
-          : `${dest.name}까지 가는 막차를 자동으로 못 찾았어요. 행선지를 보고 집까지 가는 열차를 골라 주세요.`}
-      </p>
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {list.map((t) => (
-          <button
-            key={`${t.min}-${t.endId}`}
-            type="button"
-            onClick={() => onChoose(t.time)}
-            aria-pressed={t.time === train}
-            className="min-h-9 rounded-full border border-[var(--border)] px-3 text-[0.85rem] text-[var(--text)] aria-pressed:border-[var(--accent)] aria-pressed:text-[var(--accent)]"
-          >
-            {t.time} {t.endName}행{t === last ? ' · 막차' : ''}
-          </button>
-        ))}
-      </div>
-      {!mustShowManual && (
-        <button
-          type="button"
-          onClick={() => setManualOpen((open) => !open)}
-          aria-expanded={manualOpen}
-          className="mt-2 min-h-9 text-[0.85rem] text-[var(--muted)] underline"
-        >
-          {manualOpen ? '직접 입력 닫기' : '시각 직접 입력'}
-        </button>
-      )}
-      {(mustShowManual || manualOpen) && <div className="mt-3">{manualField}</div>}
-    </div>
+    <LastTrainField
+      {...field}
+      status="ready"
+      auto={last ? { time: last.time, detail: `${last.endName}행 · ${dayNote}` } : undefined}
+      note={last ? undefined : `${dest.name}까지 가는 막차를 자동으로 못 찾았어요. 아래에서 집까지 가는 열차를 고르거나 직접 입력해 주세요.`}
+      extra={list.length ? { label: '다른 열차', content: chips } : undefined}
+    />
   );
 }
