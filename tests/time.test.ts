@@ -43,7 +43,7 @@ test('03:59와 04:00의 23:30 막차', () => {
 
 test('출발 시각이 자정을 거꾸로 넘는 경우', () => {
   const train = trainTime('00:10', at(28, 22, 0))!;
-  assert.deepEqual(departTime(train, 20), at(28, 23, 45));
+  assert.deepEqual(departTime(train, 20), at(28, 23, 50));
 });
 
 test('색 단계 경계', () => {
@@ -58,11 +58,11 @@ test('색 단계 경계', () => {
 test('더 이른 출발이 기준, 놓친 사람은 제외', () => {
   const now = at(28, 23, 0);
   const plan = computePlan([
-    { name: 'A', station: 'a', train: '00:30', walk: 10 }, // 00:15 출발
-    { name: 'B', station: 'b', train: '23:50', walk: 20 }, // 23:25 출발
+    { name: 'A', station: 'a', train: '00:30', walk: 10 }, // 00:20 출발
+    { name: 'B', station: 'b', train: '23:50', walk: 20 }, // 23:30 출발
   ], now);
   assert.equal(plan.lead, 1);
-  assert.equal(plan.level, 'warn'); // 25분 남음
+  assert.equal(plan.level, 'warn'); // 30분 남음
 
   const later = computePlan(plan.rows, at(28, 23, 55)); // B 막차 지남
   assert.equal(later.rows[1]?.missed, true);

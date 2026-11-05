@@ -1,7 +1,6 @@
 // 막차 시간 계산 (DOM 없음, 서버·클라이언트·테스트 공용)
 
 export const DAY_START_MIN = 4 * 60; // 운행일 경계 04:00
-export const BUFFER_MIN = 5;
 const MIN = 60_000;
 
 export type Level = 'calm' | 'warn' | 'urgent' | 'go' | 'missed';
@@ -53,7 +52,7 @@ export function trainTime(hhmm: string, now: Date): Date | null {
 }
 
 export function departTime(train: Date, walkMin: number): Date {
-  return new Date(train.getTime() - (walkMin + BUFFER_MIN) * MIN);
+  return new Date(train.getTime() - walkMin * MIN); // 여유 시간은 두지 않는다 (2026-11 결정)
 }
 
 /** 출발까지 남은 ms → 색 단계 */
