@@ -71,7 +71,10 @@ function arrivalAt(t: NumberedTrain, destByNo: Map<string, SeoulRow[]>, destCode
       terminus = true; // 종착역 행의 시각은 자리 표시 값
       continue;
     }
-    const min = arrivalMin(r.ARRIVETIME) ?? arrivalMin(r.LEFTTIME);
+    // 이 역에서 출발하는 열차는 도착 시각이 "00:00:00"(자리 표시 값)이라 24:00 도착으로 잘못 읽힌다.
+    // 그러면 반대 방향 열차가 도착역에 "나중에" 온다고 판정되므로 출발 시각으로 본다 (회현→불암산 토요일 K4335)
+    const arrive = r.ARRIVETIME === '00:00:00' ? null : arrivalMin(r.ARRIVETIME);
+    const min = arrive ?? arrivalMin(r.LEFTTIME);
     if (min != null && min > t.min && min - t.min <= MAX_RIDE_MIN) return min;
   }
   return terminus ? null : undefined;

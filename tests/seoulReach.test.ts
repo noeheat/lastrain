@@ -73,3 +73,21 @@ test('도착역 시간표에 같은 번호가 없으면(급행 미정차 등) �
   const r = findLastTrainByNumber({ ...weekday, dest: rows([['9999', '24:30:00', '0211', '성수']]) });
   assert.equal(r.last, null);
 });
+
+test('도착역에서 출발하는 반대 방향 열차는 도착 시각 00:00:00을 24:00으로 읽지 않는다 (회현→불암산 토요일)', () => {
+  const r = findLastTrainByNumber({
+    originCode: '0425', destCode: '0409',
+    origin: {
+      U: rows([['4180', '23:20:00', '0409', '불암산'], ['4184', '23:30:00', '0411', '노원']]),
+      // K4335는 불암산에서 23:07에 출발해 회현을 23:42에 지나는 산본행
+      D: rows([['K4335', '23:42:00', '1751', '산본']]),
+    },
+    dest: [
+      ...rows([['4180', '00:00:00', '0409', '불암산']]),
+      { TRAIN_NO: 'K4335', ARRIVETIME: '00:00:00', LEFTTIME: '23:07:00', DESTSTATION: '1751', SUBWAYENAME: '산본' },
+    ],
+  });
+  assert.equal(r.last?.time, '23:20');
+  assert.equal(r.last?.endName, '불암산');
+  assert.equal(r.last?.dir, 'U');
+});
