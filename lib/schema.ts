@@ -13,7 +13,7 @@ export const PersonSchema = z.object({
   name: z.string().trim().min(1).max(20),
   station: z.string().trim().min(1).max(30),
   train: z.string().refine((v) => parseHHMM(v) != null, '막차 시각 형식이 잘못됐어요'),
-  walk: z.number().int().min(0).max(180),
+  walk: z.number().int().min(0).max(180).optional(), // 예전 저장값 (쓰지 않음)
   // 검색으로 고른 역 (직접 입력했거나 v2 2단계 이전 저장값이면 없음)
   origin: StationSchema.optional(),
   dest: StationSchema.optional(),

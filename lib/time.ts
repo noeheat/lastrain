@@ -11,15 +11,13 @@ export type Person = {
   name: string;
   station: string;
   train: string; // "HH:MM"
-  walk: number; // 역까지 도보(분)
+  walk?: number; // 예전 저장값의 역까지 도보(분). 2026-11부터 쓰지 않는다 (길찾기는 지도 앱으로)
   origin?: StationRef;
   dest?: StationRef;
 };
 
 export type PlanRow = Person & {
   trainAt: Date;
-  departAt: Date;
-  msToDepart: number;
   msToTrain: number;
   missed: boolean;
 };
@@ -51,11 +49,7 @@ export function trainTime(hhmm: string, now: Date): Date | null {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, m);
 }
 
-export function departTime(train: Date, walkMin: number): Date {
-  return new Date(train.getTime() - walkMin * MIN); // 여유 시간은 두지 않는다 (2026-11 결정)
-}
-
-/** 출발까지 남은 ms → 색 단계 */
+/** 막차까지 남은 ms → 색 단계 (카운트다운은 막차가 출발역을 떠나는 시각까지 센다) */
 export function levelFor(ms: number): Exclude<Level, 'missed'> {
   if (ms <= 0) return 'go';
   if (ms <= 10 * MIN) return 'urgent';
@@ -63,17 +57,14 @@ export function levelFor(ms: number): Exclude<Level, 'missed'> {
   return 'calm';
 }
 
-/** lead: 아직 막차가 남은 사람 중 출발이 가장 이른 사람의 index (없으면 -1) */
+/** lead: 아직 막차가 남은 사람 중 막차가 가장 이른 사람의 index (없으면 -1) */
 export function computePlan(people: Person[], now: Date): { rows: PlanRow[]; lead: number; level: Level } {
   const rows: PlanRow[] = people.map((p) => {
     // 입력은 저장 전에 검증되므로 null이 아니다
     const train = trainTime(p.train, now)!;
-    const depart = departTime(train, p.walk);
     return {
       ...p,
       trainAt: train,
-      departAt: depart,
-      msToDepart: depart.getTime() - now.getTime(),
       msToTrain: train.getTime() - now.getTime(),
       missed: train <= now,
     };
@@ -82,10 +73,10 @@ export function computePlan(people: Person[], now: Date): { rows: PlanRow[]; lea
   let lead = -1;
   rows.forEach((r, i) => {
     if (r.missed) return;
-    if (lead === -1 || r.departAt < rows[lead]!.departAt) lead = i;
+    if (lead === -1 || r.trainAt < rows[lead]!.trainAt) lead = i;
   });
 
-  const level: Level = lead === -1 ? 'missed' : levelFor(rows[lead]!.msToDepart);
+  const level: Level = lead === -1 ? 'missed' : levelFor(rows[lead]!.msToTrain);
   return { rows, lead, level };
 }
 

@@ -10,7 +10,7 @@ const hongdae = { id: 'MTRS12239', name: '홍대입구', line: '2호선' };
 const jeongja = { id: 'MTRDXD1D014', name: '정자', line: '신분당' };
 const isu = { id: 'MTRS14432', name: '총신대입구(이수)', line: '4호선' };
 
-const person = (p: Partial<Person>): Person => ({ name: '민수', station: '강남', train: '23:59', walk: 5, ...p });
+const person = (p: Partial<Person>): Person => ({ name: '민수', station: '강남', train: '23:59', ...p });
 
 test('originFromPeople: 2명 고정이던 저장값에서 출발역을 다시 만든다 (노선별 역 중복 제거)', () => {
   const o = originFromPeople([person({ origin: s2, dest: hongdae }), person({ origin: sb, dest: jeongja }), person({ origin: s2 })]);

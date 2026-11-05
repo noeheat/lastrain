@@ -18,7 +18,7 @@ type Props = {
 type Item = { person: Person; row: PlanRow | null; level: Level };
 
 const levelOf = (row: PlanRow | null): Level =>
-  !row ? 'missed' : row.missed ? 'missed' : levelFor(row.msToDepart);
+  !row ? 'missed' : row.missed ? 'missed' : levelFor(row.msToTrain);
 
 /**
  * 홈 화면: 출발역, 한 사람씩 넘겨 보는 큰 카운트다운, 사람 칩(각자 남은 시간·색), 사람 추가.
@@ -142,7 +142,7 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
 function shortStatus({ row }: Item): string {
   if (!row) return '확인';
   if (row.missed) return '놓침';
-  return row.msToDepart <= 0 ? '출발!' : formatRemaining(row.msToDepart);
+  return formatRemaining(row.msToTrain);
 }
 
 type FocusProps = { item: Item; count: number; index: number; onRed: boolean; onStep: (step: number) => void; onEdit: () => void };
@@ -161,14 +161,11 @@ function Focus({ item, count, index, onRed, onStep, onEdit }: FocusProps) {
   } else if (row.missed) {
     clock = '놓침';
     sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
-  } else if (level === 'go') {
-    clock = '지금 출발!';
-    sub = `${row.station} 막차 ${formatClock(row.trainAt)}까지 ${formatRemaining(row.msToTrain)}`;
   } else {
-    clock = formatRemaining(row.msToDepart);
-    sub = `${formatClock(row.departAt)}에 출발 · ${row.station} 막차 ${formatClock(row.trainAt)}`;
+    clock = formatRemaining(row.msToTrain);
+    sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 막차`;
   }
-  const isText = !row || row.missed || level === 'go';
+  const isText = !row || row.missed;
   const arrow = `min-h-11 min-w-11 text-[1.6rem] leading-none ${onRed ? 'text-white' : 'text-[var(--muted)]'}`;
 
   return (
