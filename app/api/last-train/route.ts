@@ -3,6 +3,7 @@
 
 import type { NextRequest } from 'next/server';
 import { json } from '@/lib/http';
+import { rateLimit } from '@/lib/rateLimit';
 import { LastTrainQuerySchema } from '@/lib/schema';
 import { DIRS, findLastTrain, toTrains, type LastTrainResult } from '@/lib/reach';
 import { stationTimetables, tagoFailure, type TimetableRow } from '@/lib/tago';
@@ -14,6 +15,8 @@ const endIds = (rows: TimetableRow[]) =>
   new Set(rows.flatMap((r) => (r.endSubwayStationId ? [r.endSubwayStationId] : [])));
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 'last-train');
+  if (limited) return limited;
   const sp = req.nextUrl.searchParams;
   const parsed = LastTrainQuerySchema.safeParse({
     origin: sp.get('origin'), dest: sp.get('dest'), daily: sp.get('daily'),

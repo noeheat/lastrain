@@ -2,10 +2,13 @@
 
 import type { NextRequest } from 'next/server';
 import { json } from '@/lib/http';
+import { rateLimit } from '@/lib/rateLimit';
 import { StationQuerySchema } from '@/lib/schema';
 import { searchStations, tagoFailure } from '@/lib/tago';
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 'stations');
+  if (limited) return limited;
   const parsed = StationQuerySchema.safeParse({ q: req.nextUrl.searchParams.get('q') ?? '' });
   if (!parsed.success) return json({ error: '역 이름을 1~20자로 입력해 주세요' }, 400);
   try {

@@ -34,6 +34,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `components/`: `LastTrainApp`(화면 전환·localStorage `lastTrain.v1`·`?now=HH:MM` 디버그), `SetupForm`, `Countdown`, `ServiceWorker`
 - `lib/time.ts`: 순수 시간 로직 — 운행일 경계 04:00, 출발 = 막차 − 도보 − 5분, 색 단계
 - `lib/holidays.ts`: 공휴일 목록(2026~2028, 천문연구원 월력요항). 공휴일이면 `dailyTypeCode`가 휴일(03)
+- `lib/rateLimit.ts`: API 호출 제한(IP별 1분, 메모리). 각 `app/api/*/route.ts` 첫 줄에서 `rateLimit(req, '<라우트>')`
 - `lib/schema.ts`: zod 입력 검증 (클라이언트·서버 공용)
 - `lib/seoul.ts`·`lib/seoulReach.ts`: 1~9호선 막차 — 서울 열린데이터광장 시간표(토·휴일 포함), 열차 번호로 도착역 통과 판정. 실패하면 TAGO(`lib/tago.ts`·`lib/reach.ts`)로 넘어감
 - `lib/transfer.ts`(순수)·`lib/kakao.ts`·`lib/plan.ts`, `/api/plan`: 환승 막차 — 카카오 지하철 경로를 구간으로 나눠 마지막 구간 막차부터 역산. 화면은 `components/TransferPlan`

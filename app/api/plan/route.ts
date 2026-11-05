@@ -3,10 +3,13 @@
 
 import type { NextRequest } from 'next/server';
 import { json } from '@/lib/http';
+import { rateLimit } from '@/lib/rateLimit';
 import { PlanQuerySchema } from '@/lib/schema';
 import { planTransfer } from '@/lib/plan';
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimit(req, 'plan');
+  if (limited) return limited;
   const sp = req.nextUrl.searchParams;
   const parsed = PlanQuerySchema.safeParse({ origin: sp.get('origin'), dest: sp.get('dest'), daily: sp.get('daily') });
   if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? '잘못된 요청이에요' }, 400);
