@@ -1,6 +1,8 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { nameVariants, sameStation, normLine, lineLabel, subwayRoutes, planBackward, type LegTrain } from '../lib/transfer';
+import {
+  nameVariants, sameStation, normLine, lineLabel, subwayRoutes, planBackward, legProblem, ESTIMATE_MARGIN_MIN, type LegTrain,
+} from '../lib/transfer';
 
 test('nameVariants·sameStation: 괄호 표기와 "역" 접미사', () => {
   assert.deepEqual(nameVariants('잠실(송파구청)'), ['잠실(송파구청)', '잠실', '송파구청']);
@@ -73,4 +75,29 @@ test('lineLabel: 화면용 노선 이름을 하나로', () => {
   assert.equal(lineLabel('공항'), '공항철도');
   assert.equal(lineLabel('공항철도'), '공항철도');
   assert.equal(lineLabel('2호선'), '2호선');
+});
+
+test('planBackward: 추정 도착이 마감과 딱 맞으면 고르지 않고 더 이른 열차, 실제 시각은 딱 맞아도 고른다', () => {
+  const est = (dep: number, arr: number): LegTrain => ({ dep, arr, endName: '', estimated: true });
+  // 다음 구간 1410 출발, 환승 도보 5분 → 앞 구간은 1405까지 도착해야 한다
+  const next = { trains: [t(1410, 1430)], walkBefore: 5 };
+  const estimated = planBackward([{ trains: [est(1380, 1400), est(1385, 1405)], walkBefore: 0 }, next]);
+  assert.equal(estimated?.[0]?.dep, 1380); // 1405 도착(추정)은 여유 2분을 더하면 1407 > 1405
+  const actual = planBackward([{ trains: [t(1380, 1400), t(1385, 1405)], walkBefore: 0 }, next]);
+  assert.equal(actual?.[0]?.dep, 1385);
+  // 여유 안쪽이면 추정이어도 고른다
+  const inside = planBackward([{ trains: [est(1385, 1405 - ESTIMATE_MARGIN_MIN)], walkBefore: 0 }, next]);
+  assert.equal(inside?.[0]?.dep, 1385);
+  // 마지막 구간은 마감이 없어 추정 도착도 그대로 막차를 고른다
+  assert.equal(planBackward([{ trains: [est(1380, 1400), est(1440, 1500)], walkBefore: 0 }])?.[0]?.dep, 1440);
+});
+
+test('legProblem: 시간표 없음과 열차 0개(판정 불가)를 구분, 문제없으면 null', () => {
+  const legs = [
+    { line: '경의중앙선', from: '서울역', to: '가좌', minutes: 10 },
+    { line: '6호선', from: '디지털미디어시티', to: '응암', minutes: 8 },
+  ];
+  assert.equal(legProblem(legs, [[], [t(1400, 1410)]]), '경의중앙선 서울역→가좌: 도착역까지 가는 열차를 판정할 수 없어요');
+  assert.equal(legProblem(legs, [[t(1380, 1390)], null]), '6호선 디지털미디어시티→응암 시간표를 찾지 못했어요');
+  assert.equal(legProblem(legs, [[t(1380, 1390)], [t(1400, 1410)]]), null);
 });

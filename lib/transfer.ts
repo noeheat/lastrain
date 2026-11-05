@@ -86,16 +86,38 @@ export type LegTrain = {
   holidayForSaturday?: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산
 };
 
+/**
+ * 추정 도착 시각(출발 + 카카오 소요시간, 종착역이라 시각을 모름)에 두는 환승 여유(분).
+ * 추정이 1분만 빨라도 다음 열차를 놓치므로, 추정 도착은 이만큼 늦게 도착한다고 보고 비교한다
+ */
+export const ESTIMATE_MARGIN_MIN = 2;
+
 /** 구간별 "내릴 역까지 가는 열차"(출발 시각 순)로 거꾸로 계산. 이어 탈 수 없으면 null */
 export function planBackward(legs: { trains: LegTrain[]; walkBefore: number }[]): LegTrain[] | null {
   const chosen: LegTrain[] = [];
-  let deadline = Infinity;
+  let deadline = Infinity; // 마지막 구간은 마감이 없다
   for (let i = legs.length - 1; i >= 0; i--) {
     const leg = legs[i]!;
-    const t = leg.trains.filter((x) => x.arr <= deadline).at(-1);
+    const t = leg.trains.filter((x) => x.arr + (x.estimated ? ESTIMATE_MARGIN_MIN : 0) <= deadline).at(-1);
     if (!t) return null;
     chosen[i] = t;
     deadline = t.dep - leg.walkBefore;
   }
   return chosen;
+}
+
+/**
+ * 구간 시간표 결과를 보고 이 경로를 버려야 하는 이유. 문제가 없으면 null.
+ * - null: 역이나 시간표를 찾지 못함
+ * - []: 시간표는 있지만 내릴 역까지 가는 열차를 판정할 수 없음
+ *   (예: 경의중앙 서울역→가좌처럼 역 ID 접두가 달라 순서를 모르면, 내릴 역이 종착인 열차만 남는다)
+ */
+export function legProblem(legs: Leg[], lists: (LegTrain[] | null)[]): string | null {
+  for (let i = 0; i < legs.length; i++) {
+    const { line, from, to } = legs[i]!;
+    const list = lists[i];
+    if (!list) return `${line} ${from}→${to} 시간표를 찾지 못했어요`;
+    if (list.length === 0) return `${line} ${from}→${to}: 도착역까지 가는 열차를 판정할 수 없어요`;
+  }
+  return null;
 }

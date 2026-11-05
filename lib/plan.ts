@@ -3,7 +3,7 @@
 import { stationCoord, transitRoutes } from './kakao';
 import { seoulLegTrains } from './seoul';
 import { tagoLegTrains } from './tago';
-import { planBackward, subwayRoutes, type Leg, type LegTrain } from './transfer';
+import { legProblem, planBackward, subwayRoutes, type Leg, type LegTrain } from './transfer';
 
 const MAX_ROUTES = 3; // 시간표 호출 수 제한 (카카오 추천 순서 앞쪽만)
 
@@ -45,9 +45,9 @@ export async function planTransfer(
   const plans = await Promise.all(routes.map(async (route): Promise<PlanResult | null> => {
     try {
       const lists = await Promise.all(route.legs.map((leg) => legTrains(leg, daily)));
-      const missing = route.legs.find((_, i) => !lists[i]);
-      if (missing) { // 시간표를 못 찾은 구간이 있으면 이 경로는 버린다
-        reasons.add(`${missing.line} ${missing.from}→${missing.to} 시간표를 찾지 못했어요`);
+      const problem = legProblem(route.legs, lists);
+      if (problem) { // 시간표를 못 찾았거나 열차를 판정할 수 없는 구간이 있으면 이 경로는 버린다
+        reasons.add(problem);
         return null;
       }
       const chosen = planBackward(lists.map((trains, i) => ({ trains: trains!, walkBefore: route.walks[i] ?? 0 })));
