@@ -7,6 +7,7 @@
 // 판정할 수 없는 열차는 "안 간다"로 본다 (틀려도 더 이른 막차를 알려주는 쪽).
 
 import { DAY_START_MIN } from './time';
+import { isHoliday } from './holidays';
 
 export type Dir = 'U' | 'D';
 export const DIRS: readonly Dir[] = ['U', 'D'];
@@ -61,8 +62,9 @@ export function toTrains(rows: RawRow[], stationId: string): Train[] {
   return trains.sort((a, b) => a.min - b.min);
 }
 
-/** 운행일 → TAGO 요일 코드 (01 평일, 02 토, 03 일). 공휴일은 아직 반영하지 않는다. */
+/** 운행일 → TAGO 요일 코드 (01 평일, 02 토, 03 일·공휴일). 토요일이 공휴일이어도 휴일 시간표 */
 export function dailyTypeCode(serviceDay: Date): '01' | '02' | '03' {
+  if (isHoliday(serviceDay)) return '03';
   const d = serviceDay.getDay();
   return d === 6 ? '02' : d === 0 ? '03' : '01';
 }

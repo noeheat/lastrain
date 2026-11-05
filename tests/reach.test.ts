@@ -1,5 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
+import { serviceDay } from '../lib/time';
 import { parseTagoTime, toTrains, dailyTypeCode, position, findLastTrain, type RawRow, type RouteInput } from '../lib/reach';
 
 // 실제 TAGO 응답(2026-10 평일)에서 막차 쪽만 옮겨 적은 값
@@ -39,6 +40,16 @@ test('dailyTypeCode: 운행일 요일', () => {
   assert.equal(dailyTypeCode(new Date(2026, 9, 30)), '01'); // 금
   assert.equal(dailyTypeCode(new Date(2026, 9, 31)), '02'); // 토
   assert.equal(dailyTypeCode(new Date(2026, 10, 1)), '03'); // 일
+});
+
+test('dailyTypeCode: 공휴일은 요일과 상관없이 휴일 시간표', () => {
+  assert.equal(dailyTypeCode(new Date(2026, 11, 25)), '03'); // 금, 성탄절
+  assert.equal(dailyTypeCode(new Date(2027, 1, 9)), '03'); // 화, 설날 대체공휴일
+  assert.equal(dailyTypeCode(new Date(2027, 6, 17)), '03'); // 토, 제헌절 (토요일이어도 휴일표)
+  assert.equal(dailyTypeCode(new Date(2026, 11, 24)), '01'); // 목, 평일
+  // 12/26 01:00은 운행일이 12/25(성탄절)
+  assert.equal(dailyTypeCode(serviceDay(new Date(2026, 11, 26, 1, 0))), '03');
+  assert.equal(dailyTypeCode(serviceDay(new Date(2026, 11, 26, 5, 0))), '02'); // 토
 });
 
 test('position: 접두 문자, 지선 표기, 다른 노선', () => {
