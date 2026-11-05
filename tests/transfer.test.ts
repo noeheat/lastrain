@@ -28,7 +28,7 @@ const sub = (line: string, stops: string[], time: number) =>
 const walk = (guidance: string, time: number) => ({ properties: { type: 'WALKING', time, guidance } });
 const bus = { properties: { type: 'BUS', time: 255 } };
 
-test('subwayRoutes: 지하철+역 안 환승만, 급행·일반 중복 제거, 버스·역 밖 도보 경로 제외', () => {
+test('subwayRoutes: 지하철+역 안 환승만, 급행·일반 중복은 하나로(소요시간은 긴 쪽), 버스·역 밖 도보 경로 제외', () => {
   const routes = subwayRoutes({
     routes: [
       { steps: [sub('9호선', ['신논현', '선정릉', '종합운동장'], 490), walk('종합운동장종합운동장역 환승', 309), sub('2호선', ['종합운동장', '신천', '잠실(송파구청)'], 240)] },
@@ -40,7 +40,7 @@ test('subwayRoutes: 지하철+역 안 환승만, 급행·일반 중복 제거, �
   assert.equal(routes.length, 2);
   assert.deepEqual(routes[0], {
     legs: [
-      { line: '9호선', from: '신논현', to: '종합운동장', minutes: 9 },
+      { line: '9호선', from: '신논현', to: '종합운동장', minutes: 11 }, // 급행 9분(490초)·일반 11분(630초) 중 긴 쪽
       { line: '2호선', from: '종합운동장', to: '잠실(송파구청)', minutes: 4 },
     ],
     walks: [0, 6],
@@ -100,4 +100,20 @@ test('legProblem: 시간표 없음과 열차 0개(판정 불가)를 구분, 문�
   assert.equal(legProblem(legs, [[], [t(1400, 1410)]]), '경의중앙선 서울역→가좌: 도착역까지 가는 열차를 판정할 수 없어요');
   assert.equal(legProblem(legs, [[t(1380, 1390)], null]), '6호선 디지털미디어시티→응암 시간표를 찾지 못했어요');
   assert.equal(legProblem(legs, [[t(1380, 1390)], [t(1400, 1410)]]), null);
+});
+
+test('subwayRoutes: 급행이 먼저 나와도 일반 소요시간과 긴 환승 도보를 남긴다 (경의중앙 일산→홍대입구)', () => {
+  // 카카오 응답(2026-11): 급행 28분 7역, 일반 33분 13역
+  const express = sub('경의중앙선', ['일산', '대곡', '능곡', '행신', '디지털미디어시티', '가좌', '홍대입구'], 28 * 60);
+  const local = sub('경의중앙선', ['일산', '풍산', '백마', '곡산', '대곡', '능곡', '행신', '강매', '화전', '수색', '디지털미디어시티', '가좌', '홍대입구'], 33 * 60);
+  const line2 = sub('2호선', ['홍대입구', '합정'], 180);
+  const routes = subwayRoutes({
+    routes: [
+      { steps: [express, walk('홍대입구홍대입구역 환승', 240), line2] },
+      { steps: [local, walk('홍대입구홍대입구역 환승', 300), line2] },
+    ],
+  }, '일산', '합정');
+  assert.equal(routes.length, 1);
+  assert.equal(routes[0]?.legs[0]?.minutes, 33);
+  assert.deepEqual(routes[0]?.walks, [0, 5]);
 });

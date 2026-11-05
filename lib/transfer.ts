@@ -43,10 +43,10 @@ type KakaoBody = { routes?: { steps?: KakaoStep[] }[] };
 
 const toMin = (sec: number | undefined) => Math.ceil((sec ?? 0) / 60);
 
-/** 카카오 경로 응답 → 출발역에서 지하철로 시작해 도착역에서 끝나는 지하철 전용 경로 (같은 구간 조합은 하나만) */
+/** 카카오 경로 응답 → 출발역에서 지하철로 시작해 도착역에서 끝나는 지하철 전용 경로 (같은 구간 조합은 하나로, 소요시간은 긴 쪽) */
 export function subwayRoutes(body: KakaoBody, origin: string, dest: string): SubwayRoute[] {
   const out: SubwayRoute[] = [];
-  const seen = new Set<string>();
+  const seen = new Map<string, SubwayRoute>();
   for (const route of body.routes ?? []) {
     const legs: Leg[] = [];
     const walks: number[] = [];
@@ -73,9 +73,17 @@ export function subwayRoutes(body: KakaoBody, origin: string, dest: string): Sub
     if (!ok || legs.length === 0) continue;
     if (!sameStation(legs[0]!.from, origin) || !sameStation(legs.at(-1)!.to, dest)) continue;
     const key = legs.map((l) => `${normLine(l.line)}:${l.from}>${l.to}`).join('|');
-    if (seen.has(key)) continue; // 급행·일반만 다른 같은 경로
-    seen.add(key);
-    out.push({ legs, walks });
+    const prev = seen.get(key);
+    if (prev) {
+      // 급행·일반만 다른 같은 경로: 구간마다 오래 걸리는 쪽(일반)을 남긴다. TAGO 구간은 도착을 "출발 + 소요시간"으로
+      // 추정하므로, 급행 소요시간을 쓰면 일반열차가 일찍 도착한다고 보고 못 타는 환승을 탈 수 있다고 계산한다
+      legs.forEach((l, i) => { prev.legs[i]!.minutes = Math.max(prev.legs[i]!.minutes, l.minutes); });
+      walks.forEach((w, i) => { prev.walks[i] = Math.max(prev.walks[i] ?? 0, w); });
+      continue;
+    }
+    const found = { legs, walks };
+    seen.set(key, found);
+    out.push(found);
   }
   return out;
 }
