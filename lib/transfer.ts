@@ -3,6 +3,8 @@
 // 1) 카카오 경로 응답에서 "지하철 + 역 안 환승 도보"로만 된 경로를 구간 목록으로 뽑는다.
 // 2) 마지막 구간의 막차부터 거꾸로, 앞 구간은 "다음 구간 출발 − 환승 도보" 안에 도착하는 마지막 열차를 고른다.
 
+import { busName } from './bus';
+
 /** 역 이름 후보. 출처마다 표기가 달라서(잠실(송파구청)·잠실, 총신대입구(이수)·이수) 괄호 앞뒤를 모두 쓴다. */
 export function nameVariants(name: string): string[] {
   const raw = name.trim();
@@ -26,7 +28,14 @@ export const lineLabel = (line: string) => {
   return t === '공항' ? '공항철도' : `${t}선`;
 };
 
-export type Leg = { line: string; from: string; to: string; minutes: number };
+/** 화면에 보여줄 구간 이름: 버스는 "640번 버스", 지하철은 lineLabel ("신분당선") */
+export const legName = (l: { line: string; kind?: 'bus' }) => (l.kind === 'bus' ? `${l.line}번 버스` : lineLabel(l.line));
+
+export type Leg = {
+  line: string; from: string; to: string; minutes: number;
+  kind?: 'bus'; // 버스 구간: line은 대표 노선 번호, names는 이 구간을 지나는 노선 전부, from·to는 정류장
+  names?: string[];
+};
 /** walks[i]: i번째 구간을 타기 전 환승 도보(분). walks[0]은 0 (출발역 도보는 사람마다 따로 입력) */
 export type SubwayRoute = { legs: Leg[]; walks: number[] };
 
@@ -88,9 +97,60 @@ export function subwayRoutes(body: KakaoBody, origin: string, dest: string): Sub
   return out;
 }
 
+/**
+ * 카카오 경로 응답 → 지하철과 서울 버스가 섞인 경로 (지하철만·버스만인 경로는 다른 함수가 맡는다).
+ * 첫 구간이 지하철이면 출발역에서, 끝 구간이 지하철이면 도착역에서 타고 내려야 한다. 버스면 역 밖 정류장까지 걸어도 된다.
+ * 구간 사이 걷기(역 밖 포함)는 환승 시간으로 센다. 출근·새벽 노선만 있는 버스 구간은 쓸 수 없어 경로를 버린다.
+ */
+export function mixedRoutes(body: KakaoBody, origin: string, dest: string): SubwayRoute[] {
+  const out: SubwayRoute[] = [];
+  const seen = new Set<string>();
+  for (const route of body.routes ?? []) {
+    const legs: Leg[] = [];
+    const walks: number[] = [];
+    let walk = 0;
+    let ok = true;
+    for (const s of route.steps ?? []) {
+      const p = s.properties ?? {};
+      const from = p.stops?.[0]?.name;
+      const to = p.stops?.at(-1)?.name;
+      if (p.type === 'SUBWAY' || p.type === 'BUS') {
+        if (!from || !to) { ok = false; break; }
+        if (p.type === 'SUBWAY') {
+          const line = p.vehicles?.[0]?.name;
+          if (!line) { ok = false; break; }
+          legs.push({ line, from, to, minutes: toMin(p.time) });
+        } else {
+          const names = (p.vehicles ?? []).flatMap((v) => (v.name ? [busName(v.name)] : [])).filter((n): n is string => !!n);
+          if (names.length === 0) { ok = false; break; }
+          legs.push({ kind: 'bus', line: names[0]!, names, from, to, minutes: toMin(p.time) });
+        }
+        walks.push(legs.length === 1 ? 0 : walk); // 첫 구간 앞 걷기(역 → 정류장)는 환승이 아니다
+        walk = 0;
+      } else if (p.type === 'WALKING') {
+        walk += toMin(p.time);
+      } else {
+        ok = false;
+        break;
+      }
+    }
+    if (!ok || !legs.some((l) => l.kind === 'bus') || !legs.some((l) => !l.kind)) continue;
+    const first = legs[0]!;
+    const last = legs.at(-1)!;
+    if (!first.kind && !sameStation(first.from, origin)) continue;
+    if (!last.kind && !sameStation(last.to, dest)) continue;
+    const key = legs.map((l) => `${l.kind ? l.names!.join('/') : normLine(l.line)}:${l.from}>${l.to}`).join('|');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ legs, walks });
+  }
+  return out;
+}
+
 /** 구간 열차: 출발역에서 떠나는 시각과 내릴 역 도착 시각(운행일 기준 분) */
 export type LegTrain = {
   dep: number; arr: number; endName: string; estimated: boolean;
+  line?: string; // 버스 구간에서 실제로 고른 노선 (구간의 대표 노선과 다를 수 있다)
   holidayForSaturday?: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산
 };
 
@@ -122,9 +182,10 @@ export function planBackward(legs: { trains: LegTrain[]; walkBefore: number }[])
  */
 export function legProblem(legs: Leg[], lists: (LegTrain[] | null)[]): string | null {
   for (let i = 0; i < legs.length; i++) {
-    const { line, from, to } = legs[i]!;
+    const { from, to, kind } = legs[i]!;
+    const line = kind === 'bus' ? `${legs[i]!.names!.join('·')}번 버스` : legs[i]!.line;
     const list = lists[i];
-    if (!list) return `${line} ${from}→${to} 시간표를 찾지 못했어요`;
+    if (!list) return kind === 'bus' ? `${line} ${from}→${to} 막차를 찾지 못했어요` : `${line} ${from}→${to} 시간표를 찾지 못했어요`;
     if (list.length === 0) return `${line} ${from}→${to}: 도착역까지 가는 열차를 판정할 수 없어요`;
   }
   return null;

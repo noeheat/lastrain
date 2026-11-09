@@ -1,8 +1,9 @@
 // 서울 버스 API 호출과 버스 막차 계산 (서버 전용: data.go.kr 키를 쓰므로 app/api에서만 import한다)
 // data.go.kr "서울특별시_노선정보조회 서비스" (TAGO와 같은 키, 활용신청 2026-11)
 
-import { busName, busOnlyLegs, matchStops, type BusStop } from './bus';
+import { busName, busOnlyLegs, busTrains, matchStops, type BusStop } from './bus';
 import { stationCoord, transitRoutes } from './kakao';
+import type { Leg, LegTrain } from './transfer';
 
 const BASE = 'http://ws.bus.go.kr/api/rest';
 const DAY = 60 * 60 * 24;
@@ -29,6 +30,29 @@ async function routeId(name: string): Promise<string | null> {
 }
 
 const routeStops = (id: string) => get<BusStop>('busRouteInfo/getStaionByRoute', { busRouteId: id });
+
+/** 노선 배차 간격(분). 모르면 NaN */
+async function routeTerm(id: string): Promise<number> {
+  const [info] = await get<{ term?: string }>('busRouteInfo/getRouteInfo', { busRouteId: id });
+  return Number(info?.term);
+}
+
+/**
+ * 환승 경로의 버스 구간 열차 목록: 구간을 지나는 노선마다 정류장별 막차와 배차 간격으로 만든 버스들 (출발 순).
+ * 어느 노선도 맞추지 못하면 null (막차를 모름)
+ */
+export async function busLegTrains(leg: Leg): Promise<LegTrain[] | null> {
+  const results = await Promise.allSettled((leg.names ?? [leg.line]).map(async (name) => {
+    const id = await routeId(name);
+    if (!id) return [];
+    const [stops, term] = await Promise.all([routeStops(id), routeTerm(id)]);
+    const m = matchStops(stops, leg.from, leg.to, leg.minutes);
+    return m ? busTrains(m, term, name) : [];
+  }));
+  results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });
+  const trains = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).sort((a, b) => a.dep - b.dep);
+  return trains.length ? trains : null;
+}
 
 /** 버스 막차 하나: 탈 정류장을 떠나는 막차 예정 시각(dep)과 내릴 정류장 도착 예정(arr) */
 export type BusOption = {

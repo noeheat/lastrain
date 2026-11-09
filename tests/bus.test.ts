@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { busName, busOnlyLegs, matchStops, normStop, parseBusTime, type BusStop } from '../lib/bus';
+import { busName, busOnlyLegs, busTrains, matchStops, normStop, parseBusTime, type BusStop } from '../lib/bus';
 
 test('busName: 심야 표시는 떼고, 출근·공휴일제외·새벽 노선은 버린다', () => {
   assert.equal(busName('N26(심야)'), 'N26');
@@ -78,4 +78,12 @@ test('matchStops: 같은 정류장을 두 번 지나면 가장 가까운 쌍', (
   assert.equal(matchStops(loop, 'A', 'B', 10)?.board.seq, '1');
   const r = [stop(1, 'A', '22:00'), stop(2, 'X', '22:05'), stop(3, 'A', '22:30'), stop(4, 'B', '22:40')];
   assert.equal(matchStops(r, 'A', 'B', 10)?.board.seq, '3');
+});
+
+test('busTrains: 막차에서 배차 간격만큼 앞선 버스들, 도착은 추정. 배차를 모르면 막차만', () => {
+  const t = busTrains({ dep: 24 * 60 + 36, arr: 24 * 60 + 56 }, 30, '640');
+  assert.equal(t.length, 5); // 120분 안: 00:36, 00:06, 23:36, 23:06, 22:36
+  assert.deepEqual(t.map((x) => x.dep), [22 * 60 + 36, 23 * 60 + 6, 23 * 60 + 36, 24 * 60 + 6, 24 * 60 + 36]);
+  assert.ok(t.every((x) => x.arr - x.dep === 20 && x.estimated && x.line === '640'));
+  assert.deepEqual(busTrains({ dep: 1400, arr: 1420 }, NaN, 'N26').map((x) => x.dep), [1400]);
 });

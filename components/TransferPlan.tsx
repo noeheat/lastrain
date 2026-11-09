@@ -5,7 +5,7 @@ import { serviceDay, type RouteLeg } from '@/lib/time';
 import { dailyTypeCode } from '@/lib/reach';
 import type { PlanResult } from '@/lib/plan';
 import { hintClass } from './formStyles';
-import { lineLabel } from '@/lib/transfer';
+import { legName, lineLabel } from '@/lib/transfer';
 import { LastTrainField } from './LastTrainField';
 
 const DAY_LABEL = { '01': '평일', '02': '토요일', '03': '일요일·공휴일' } as const;
@@ -28,7 +28,10 @@ type Props = {
 };
 
 const legsOf = (plan: PlanResult): RouteLeg[] =>
-  plan.legs.map(({ line, from, to, dep, arr, endName }) => ({ line: lineLabel(line), from, to, dep, arr, endName }));
+  plan.legs.map(({ line, from, to, dep, arr, endName, kind, estimated }) => ({
+    line: kind ? line : lineLabel(line), from, to, dep, arr, endName,
+    ...(kind && { kind, estimated: estimated || undefined }), // 버스 구간 (지하철 추정은 저장하지 않는다)
+  }));
 
 /** 노선이 달라 환승이 필요할 때: /api/plan으로 환승 막차를 받아 출발 시각을 채운다. 못 구하면 직접 입력. */
 export function TransferPlan({ origin, dest, originLine, destLine, train, autoFill, onChoose, invalid, chosen }: Props) {
@@ -84,8 +87,8 @@ export function TransferPlan({ origin, dest, originLine, destLine, train, autoFi
       <ol className="space-y-1 text-[0.85rem] text-[var(--text)]">
         {plan.legs.map((l, i) => (
           <li key={i} className="rounded-lg border border-[var(--border)] px-3 py-2">
-            {l.line} {l.from} {l.dep} → {l.to} {l.arr}
-            {l.estimated ? ' (추정)' : ''} <span className="text-[var(--muted)]">· {l.endName}행</span>
+            {legName(l)} {l.from} {l.dep} → {l.to} {l.arr}
+            {l.estimated ? ' (추정)' : ''}{l.endName && <span className="text-[var(--muted)]"> · {l.endName}행</span>}
           </li>
         ))}
       </ol>
@@ -105,7 +108,7 @@ export function TransferPlan({ origin, dest, originLine, destLine, train, autoFi
     <LastTrainField
       {...field}
       status="ready"
-      auto={{ time: plan.depart, detail: `${origin} 출발 · 환승 ${transfers}번 · ${DAY_LABEL[daily]} 시간표` }}
+      auto={{ time: plan.depart, detail: `${plan.legs[0]?.kind ? plan.legs[0].from : origin} 출발 · 환승 ${transfers}번${plan.legs.some((l) => l.kind) ? ' · 버스 포함' : ''} · ${DAY_LABEL[daily]} 시간표` }}
       extra={{ label: '환승 경로', content: route }}
     />
   );

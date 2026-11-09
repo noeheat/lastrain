@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { computePlan, formatClock, formatRemaining, levelFor, type Level, type Person, type PlanRow } from '@/lib/time';
 import { isStale, type Origin } from '@/lib/origin';
 import { MAX_PEOPLE } from '@/lib/schema';
-import { lineLabel } from '@/lib/transfer';
+import { legName, lineLabel } from '@/lib/transfer';
 
 type Props = {
   origin: Origin;
@@ -169,7 +169,9 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
       sub = `${one.from}에서 ${formatClock(row.trainAt)}에 떠나는 ${one.line}번 버스 막차${one.estimated ? ' (추정)' : ''}`;
     } else {
       const what = one ? `${lineLabel(one.line)} ${one.endName}행 막차` : route ? `막차 · 환승 ${route.length - 1}번` : '막차';
-      sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
+      // 버스로 시작하는 환승 경로는 역이 아니라 첫 정류장에서 탄다
+      const where = route?.[0]?.kind === 'bus' ? `${route[0].from}(${route[0].line}번 버스)` : row.station;
+      sub = `${where}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
     }
   }
   const isText = !row || row.missed;
@@ -205,8 +207,8 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
         <ol className="mx-auto mt-3 max-w-[340px] space-y-1 text-left text-[0.85rem]">
           {route.map((l, i) => (
             <li key={i} className="rounded-lg border border-white/10 px-3 py-2">
-              <span className="font-semibold">{lineLabel(l.line)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
-              <span className="text-[var(--muted)]"> · {l.endName}행</span>
+              <span className="font-semibold">{legName(l)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
+              {l.estimated ? ' (추정)' : ''}{l.endName && <span className="text-[var(--muted)]"> · {l.endName}행</span>}
             </li>
           ))}
         </ol>

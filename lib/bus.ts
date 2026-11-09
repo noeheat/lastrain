@@ -5,7 +5,7 @@
 // 카카오 경로의 버스 구간(노선 번호·탈/내릴 정류장 이름)을 이 정류장 목록에 맞춘다.
 // 맞출 수 없거나 이상한 값이면 버린다 ("모르면 안 간다").
 
-import type { KakaoBody } from './transfer';
+import type { KakaoBody, LegTrain } from './transfer';
 import { DAY_START_MIN } from './time';
 
 /** 카카오 경로에서 버스를 한 번만 타는 구간 (앞뒤 걷기만 있고 지하철·다른 버스는 없음) */
@@ -93,4 +93,21 @@ export function matchStops(
   const dep = estimated ? arr - legMinutes : boardLast;
   if (dep < EARLIEST_LAST_MIN || arr - dep > MAX_RIDE_MIN) return null;
   return { board, alight, dep, arr, estimated };
+}
+
+const BUS_WINDOW_MIN = 120; // 막차 전 몇 분 안의 버스까지 만들지 (환승 역산에 쓰는 범위)
+
+/**
+ * 버스 구간 열차 목록(환승 역산용). 버스는 시간표가 없어서 정류장별 막차와 배차 간격으로 그 전 버스들을 만든다.
+ * 도착 시각은 막차의 소요시간을 그대로 쓰는 추정이라 estimated(환승 여유가 붙는다). 배차를 모르면 막차만.
+ */
+export function busTrains(last: { dep: number; arr: number }, termMin: number, line: string): LegTrain[] {
+  const ride = last.arr - last.dep;
+  const step = Number.isFinite(termMin) && termMin > 0 ? termMin : Infinity;
+  const out: LegTrain[] = [];
+  for (let dep = last.dep; dep >= last.dep - BUS_WINDOW_MIN; dep -= step) {
+    out.unshift({ dep, arr: dep + ride, endName: '', estimated: true, line });
+    if (step === Infinity) break;
+  }
+  return out;
 }

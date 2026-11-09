@@ -1,7 +1,7 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import {
-  nameVariants, sameStation, normLine, lineLabel, subwayRoutes, planBackward, legProblem, ESTIMATE_MARGIN_MIN, type LegTrain,
+  nameVariants, sameStation, normLine, lineLabel, subwayRoutes, mixedRoutes, legName, planBackward, legProblem, ESTIMATE_MARGIN_MIN, type LegTrain,
 } from '../lib/transfer';
 
 test('nameVariants·sameStation: 괄호 표기와 "역" 접미사', () => {
@@ -116,4 +116,42 @@ test('subwayRoutes: 급행이 먼저 나와도 일반 소요시간과 긴 환승
   assert.equal(routes.length, 1);
   assert.equal(routes[0]?.legs[0]?.minutes, 33);
   assert.deepEqual(routes[0]?.walks, [0, 5]);
+});
+
+// 카카오 응답(2026-11, 종로3가→목동)에서 줄인 값
+const busStep = (names: string[], stops: string[], time: number) =>
+  ({ properties: { type: 'BUS', time, stops: stops.map((name) => ({ name })), vehicles: names.map((name) => ({ name })) } });
+const outsideWalk = (time: number) => ({ properties: { type: 'WALKING', time, guidance: '신길역1번출구까지 도보' } });
+
+test('mixedRoutes: 지하철→버스 경로, 역 밖 걷기는 환승 시간, 출근·새벽 노선만 있는 버스는 버린다', () => {
+  const routes = mixedRoutes({
+    routes: [
+      { steps: [sub('1호선', ['종로3가', '신길'], 900), outsideWalk(240), busStep(['640', 'N64(심야)'], ['신길역1번출구', '목동역.목동오거리'], 1200)] },
+      { steps: [sub('1호선', ['종로3가', '신길'], 900), sub('5호선', ['신길', '목동'], 600)] }, // 지하철만
+      { steps: [busStep(['721'], ['신촌오거리', '장한평역'], 1800), busStep(['303'], ['장한평역', '잠실역'], 900)] }, // 버스만
+      { steps: [sub('1호선', ['종로3가', '신길'], 900), outsideWalk(60), busStep(['8561(출근)'], ['신길역1번출구', '목동역'], 900)] },
+      { steps: [sub('1호선', ['종각', '신길'], 900), outsideWalk(60), busStep(['640'], ['신길역1번출구', '목동역'], 900)] }, // 다른 역에서 탐
+    ],
+  }, '종로3가', '목동');
+  assert.equal(routes.length, 1);
+  assert.deepEqual(routes[0], {
+    legs: [
+      { line: '1호선', from: '종로3가', to: '신길', minutes: 15 },
+      { kind: 'bus', line: '640', names: ['640', 'N64'], from: '신길역1번출구', to: '목동역.목동오거리', minutes: 20 },
+    ],
+    walks: [0, 4],
+  });
+});
+
+test('mixedRoutes: 버스로 시작하면 역에서 정류장까지 걷는 것은 환승이 아니다', () => {
+  const routes = mixedRoutes({
+    routes: [{ steps: [outsideWalk(300), busStep(['N62(심야)'], ['종로3가역.탑골공원', '영등포역'], 1500), outsideWalk(180), sub('5호선', ['영등포구청', '목동'], 420)] }],
+  }, '종로3가', '목동');
+  assert.deepEqual(routes[0]?.walks, [0, 3]);
+  assert.equal(routes[0]?.legs[0]?.line, 'N62');
+});
+
+test('legName: 버스는 "N번 버스", 지하철은 노선 이름', () => {
+  assert.equal(legName({ line: '640', kind: 'bus' }), '640번 버스');
+  assert.equal(legName({ line: '신분당' }), '신분당선');
 });
