@@ -1,19 +1,19 @@
 // 서울 버스 API 호출과 버스 막차 계산 (서버 전용: data.go.kr 키를 쓰므로 app/api에서만 import한다)
 // data.go.kr "서울특별시_노선정보조회 서비스" (TAGO와 같은 키, 활용신청 2026-11)
 
-import { busName, busOnlyLegs, busTrains, matchStops, type BusStop } from './bus';
+import { busName, busOnlyLegs, busTrains, matchStops, parseBusLive, type BusLive, type BusStop, type LiveItem } from './bus';
 import { stationCoord, transitRoutes } from './kakao';
 import type { Leg, LegTrain } from './transfer';
 
 const BASE = 'http://ws.bus.go.kr/api/rest';
 const DAY = 60 * 60 * 24;
 
-async function get<T>(path: string, params: Record<string, string>): Promise<T[]> {
+async function get<T>(path: string, params: Record<string, string>, revalidate = DAY): Promise<T[]> {
   const key = process.env.TAGO_SERVICE_KEY;
   if (!key) throw new Error('서버에 TAGO_SERVICE_KEY가 설정되지 않았어요');
-  // 노선·정류장 목록과 정류장별 막차는 거의 안 바뀌므로 하루 캐시
+  // 노선·정류장 목록과 정류장별 막차는 거의 안 바뀌므로 하루 캐시 (실시간 도착은 30초)
   const res = await fetch(`${BASE}/${path}?${new URLSearchParams({ serviceKey: key, resultType: 'json', ...params })}`, {
-    next: { revalidate: DAY }, signal: AbortSignal.timeout(8000),
+    next: { revalidate }, signal: AbortSignal.timeout(8000),
   });
   const body = await res.json().catch(() => null);
   const code = body?.msgHeader?.headerCd;
@@ -47,7 +47,7 @@ export async function busLegTrains(leg: Leg): Promise<LegTrain[] | null> {
     if (!id) return [];
     const [stops, term] = await Promise.all([routeStops(id), routeTerm(id)]);
     const m = matchStops(stops, leg.from, leg.to, leg.minutes);
-    return m ? busTrains(m, term, name) : [];
+    return m ? busTrains(m, term, name, { arsId: m.board.arsId, routeId: id }) : [];
   }));
   results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });
   const trains = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).sort((a, b) => a.dep - b.dep);
@@ -59,6 +59,7 @@ export type BusOption = {
   route: string; from: string; to: string;
   dep: string; arr: string; depMin: number; // "HH:MM", 운행일 기준 분
   estimated: boolean; // 정류장별 막차 값이 서로 맞지 않아 내릴 곳 기준으로 추정
+  arsId?: string; routeId: string; // 탈 정류장 고유번호·노선 ID (실시간 도착 조회용)
 };
 
 const clock = (min: number) => {
@@ -84,7 +85,10 @@ export async function busOptions(
     const id = await routeId(name);
     if (!id) return null;
     const m = matchStops(await routeStops(id), leg.from, leg.to, leg.minutes);
-    return m && { route: name, from: leg.from, to: leg.to, dep: clock(m.dep), arr: clock(m.arr), depMin: m.dep, estimated: m.estimated };
+    return m && {
+      route: name, from: leg.from, to: leg.to, dep: clock(m.dep), arr: clock(m.arr), depMin: m.dep, estimated: m.estimated,
+      arsId: m.board.arsId, routeId: id,
+    };
   }));
   results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });
 
@@ -95,4 +99,13 @@ export async function busOptions(
     .sort((x, y) => y.depMin - x.depMin)
     .filter((o) => !seen.has(`${o.route}|${o.from}`) && seen.add(`${o.route}|${o.from}`));
   return { options, reasons: options.length ? [] : ['서울 버스 막차를 찾지 못했어요 (서울 밖 노선이거나 정류장을 맞추지 못함)'] };
+}
+
+/**
+ * 정류장(arsId)에서 그 노선의 실시간 도착. 같은 정류장을 보는 사람이 여럿이어도 호출이 한 번만 나가게 30초 캐시.
+ * 그 노선이 정류장 응답에 없으면 null
+ */
+export async function busLive(arsId: string, routeId: string): Promise<BusLive | null> {
+  const items = await get<LiveItem & { busRouteId?: string }>('stationinfo/getStationByUid', { arsId }, 30);
+  return parseBusLive(items.find((i) => i.busRouteId === routeId));
 }

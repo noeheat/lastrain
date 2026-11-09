@@ -8,7 +8,7 @@ const WINDOW_MS = 60_000;
 const MAX_KEYS = 10_000; // 메모리가 계속 늘지 않게 이보다 많아지면 끝난 칸을 지운다
 
 /** 1분당 IP별 한도. 환승은 외부 API를 가장 많이 부르므로 가장 낮다 */
-export const LIMITS = { stations: 60, 'station-lines': 60, 'last-train': 30, plan: 15, bus: 15, nearby: 30 } as const;
+export const LIMITS = { stations: 60, 'station-lines': 60, 'last-train': 30, plan: 15, bus: 15, 'bus-live': 60, nearby: 30 } as const;
 export type LimitedRoute = keyof typeof LIMITS;
 
 type Bucket = { start: number; count: number };

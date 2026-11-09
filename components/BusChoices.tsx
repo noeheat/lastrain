@@ -13,6 +13,7 @@ type State =
 /** 버스 막차 → 저장할 경로 (한 구간) */
 export const busRoute = (o: BusOption): RouteLeg[] => [{
   kind: 'bus', line: o.route, from: o.from, to: o.to, dep: o.dep, arr: o.arr, endName: '', estimated: o.estimated || undefined,
+  arsId: o.arsId, routeId: o.routeId,
 }];
 
 type Props = {

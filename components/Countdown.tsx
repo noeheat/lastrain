@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { computePlan, formatClock, formatRemaining, levelFor, type Level, type Person, type PlanRow } from '@/lib/time';
+import { computePlan, formatClock, formatRemaining, levelFor, trainTime, type Level, type Person, type PlanRow } from '@/lib/time';
 import { isStale, type Origin } from '@/lib/origin';
 import { MAX_PEOPLE } from '@/lib/schema';
 import { legName, lineLabel } from '@/lib/transfer';
+import { BusLive } from './BusLive';
 
 type Props = {
   origin: Origin;
@@ -92,7 +93,9 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
         <Empty title="누구의 막차를 볼까요?" body="사람마다 집 근처 역을 넣으면 막차를 자동으로 찾아요." />
       ) : (
         <Focus
+          key={current} // 사람을 넘기면 실시간 상태를 새로 시작
           item={item}
+          now={now}
           count={people.length}
           index={current}
           onStep={go}
@@ -143,16 +146,20 @@ function shortStatus({ row }: Item): string {
   return formatRemaining(row.msToTrain);
 }
 
-type FocusProps = { item: Item; count: number; index: number; onStep: (step: number) => void; onEdit: () => void };
+type FocusProps = { item: Item; now: Date; count: number; index: number; onStep: (step: number) => void; onEdit: () => void };
 
 /** 한 사람의 큰 카운트다운. 좌우로 밀거나 ‹ › 로 다음 사람 */
-function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
+function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
   const { person, row } = item;
   const startX = useRef<number | null>(null);
   const dest = person.dest?.name ?? '';
   // 저장한 막차 경로 (직접 입력한 시각이거나 예전 저장값이면 없음)
   const route = person.route?.[0]?.dep === person.train ? person.route : undefined;
   const one = route?.length === 1 ? route[0]! : null;
+  // 첫 구간이 버스면 실시간 막차 도착을 받아, 예정보다 일찍 오면 카운트다운을 앞당긴다 (늦어지면 안내만)
+  const firstBus = route?.[0]?.kind === 'bus' && route[0].arsId && route[0].routeId ? route[0] : null;
+  const [liveFirst, setLiveFirst] = useState<Date | null>(null);
+  const earlier = row && !row.missed && liveFirst && liveFirst < row.trainAt ? liveFirst : null;
 
   let clock: string;
   let sub: string;
@@ -163,7 +170,7 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
     clock = '놓침';
     sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
   } else {
-    clock = formatRemaining(row.msToTrain);
+    clock = formatRemaining(earlier ? earlier.getTime() - now.getTime() : row.msToTrain);
     if (one?.kind === 'bus') {
       // 버스는 역이 아니라 정류장에서 탄다. 정류장별 막차는 시간표상 예정 시각
       sub = `${one.from}에서 ${formatClock(row.trainAt)}에 떠나는 ${one.line}번 버스 막차${one.estimated ? ' (추정)' : ''}`;
@@ -203,12 +210,23 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
         {clock}
       </p>
       <p className="m-0 text-[0.95rem] text-[var(--muted)]">{sub}</p>
+      {earlier && <p className="m-0 mt-1 text-[0.85rem] font-semibold text-[var(--state)]">실시간 막차가 예정보다 일찍 와서 카운트다운을 앞당겼어요</p>}
+      {row && !row.missed && one && firstBus && (
+        <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLastAt={setLiveFirst} />
+      )}
       {row && !row.missed && route && route.length > 1 && (
         <ol className="mx-auto mt-3 max-w-[340px] space-y-1 text-left text-[0.85rem]">
           {route.map((l, i) => (
             <li key={i} className="rounded-lg border border-white/10 px-3 py-2">
               <span className="font-semibold">{legName(l)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
               {l.estimated ? ' (추정)' : ''}{l.endName && <span className="text-[var(--muted)]"> · {l.endName}행</span>}
+              {l.kind === 'bus' && l.arsId && l.routeId && (() => {
+                const due = trainTime(l.dep, now);
+                return due && (
+                  <BusLive arsId={l.arsId} routeId={l.routeId} line={l.line} due={due} now={now}
+                    onLastAt={i === 0 ? setLiveFirst : undefined} />
+                );
+              })()}
             </li>
           ))}
         </ol>

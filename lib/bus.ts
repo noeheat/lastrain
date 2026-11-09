@@ -101,13 +101,41 @@ const BUS_WINDOW_MIN = 120; // 막차 전 몇 분 안의 버스까지 만들지 
  * 버스 구간 열차 목록(환승 역산용). 버스는 시간표가 없어서 정류장별 막차와 배차 간격으로 그 전 버스들을 만든다.
  * 도착 시각은 막차의 소요시간을 그대로 쓰는 추정이라 estimated(환승 여유가 붙는다). 배차를 모르면 막차만.
  */
-export function busTrains(last: { dep: number; arr: number }, termMin: number, line: string): LegTrain[] {
+export function busTrains(
+  last: { dep: number; arr: number }, termMin: number, line: string, ids: { arsId?: string; routeId?: string } = {},
+): LegTrain[] {
   const ride = last.arr - last.dep;
   const step = Number.isFinite(termMin) && termMin > 0 ? termMin : Infinity;
   const out: LegTrain[] = [];
   for (let dep = last.dep; dep >= last.dep - BUS_WINDOW_MIN; dep -= step) {
-    out.unshift({ dep, arr: dep + ride, endName: '', estimated: true, line });
+    out.unshift({ dep, arr: dep + ride, endName: '', estimated: true, line, ...ids });
     if (step === Infinity) break;
   }
   return out;
+}
+
+/** 정류장 실시간 도착 (서울 버스 getStationByUid의 한 노선) */
+export type BusLive =
+  | { status: 'ended' } // 오늘 운행이 끝남
+  | { status: 'waiting' } // 차고지 출발 대기
+  | { status: 'running'; buses: { msg: string; sec: number; last: boolean }[] }; // 다가오는 버스 (최대 2대)
+
+export type LiveItem = {
+  arrmsg1?: string; arrmsg2?: string; traTime1?: string; traTime2?: string; isLast1?: string; isLast2?: string;
+};
+
+/** 실시간 도착 응답 → 화면용. arrmsg "운행종료"·"출발대기"는 상태로, 나머지는 메시지·남은 초·막차 여부 */
+export function parseBusLive(item: LiveItem | undefined): BusLive | null {
+  if (!item) return null;
+  const pairs = [
+    { msg: item.arrmsg1, sec: item.traTime1, last: item.isLast1 },
+    { msg: item.arrmsg2, sec: item.traTime2, last: item.isLast2 },
+  ];
+  const first = pairs[0]!.msg?.trim() ?? '';
+  if (first.includes('운행종료')) return { status: 'ended' };
+  if (first.includes('출발대기')) return { status: 'waiting' };
+  const buses = pairs
+    .filter((p) => p.msg && !/운행종료|출발대기/.test(p.msg))
+    .map((p) => ({ msg: p.msg!.trim(), sec: Number(p.sec) || 0, last: p.last === '1' }));
+  return { status: 'running', buses };
 }

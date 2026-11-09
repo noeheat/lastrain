@@ -1,6 +1,6 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { busName, busOnlyLegs, busTrains, matchStops, normStop, parseBusTime, type BusStop } from '../lib/bus';
+import { busName, busOnlyLegs, busTrains, matchStops, normStop, parseBusLive, parseBusTime, type BusStop } from '../lib/bus';
 
 test('busName: 심야 표시는 떼고, 출근·공휴일제외·새벽 노선은 버린다', () => {
   assert.equal(busName('N26(심야)'), 'N26');
@@ -86,4 +86,18 @@ test('busTrains: 막차에서 배차 간격만큼 앞선 버스들, 도착은 �
   assert.deepEqual(t.map((x) => x.dep), [22 * 60 + 36, 23 * 60 + 6, 23 * 60 + 36, 24 * 60 + 6, 24 * 60 + 36]);
   assert.ok(t.every((x) => x.arr - x.dep === 20 && x.estimated && x.line === '640'));
   assert.deepEqual(busTrains({ dep: 1400, arr: 1420 }, NaN, 'N26').map((x) => x.dep), [1400]);
+});
+
+// 서울 버스 정류장 실시간 응답(2026-11, 홍대입구역)에서 옮긴 값
+test('parseBusLive: 운행종료·출발대기는 상태로, 다가오는 버스는 메시지·남은 초·막차 여부', () => {
+  assert.deepEqual(parseBusLive({ arrmsg1: '운행종료', arrmsg2: '운행종료', traTime1: '0', isLast1: '0' }), { status: 'ended' });
+  assert.deepEqual(parseBusLive({ arrmsg1: '출발대기', arrmsg2: '출발대기' }), { status: 'waiting' });
+  assert.deepEqual(parseBusLive({ arrmsg1: '곧 도착', traTime1: '45', isLast1: '0', arrmsg2: '17분후[7번째 전]', traTime2: '1020', isLast2: '1' }), {
+    status: 'running',
+    buses: [{ msg: '곧 도착', sec: 45, last: false }, { msg: '17분후[7번째 전]', sec: 1020, last: true }],
+  });
+  assert.deepEqual(parseBusLive({ arrmsg1: '8분후[2번째 전]', traTime1: '581', isLast1: '1', arrmsg2: '운행종료' }), {
+    status: 'running', buses: [{ msg: '8분후[2번째 전]', sec: 581, last: true }],
+  });
+  assert.equal(parseBusLive(undefined), null);
 });

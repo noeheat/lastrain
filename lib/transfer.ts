@@ -151,6 +151,7 @@ export function mixedRoutes(body: KakaoBody, origin: string, dest: string): Subw
 export type LegTrain = {
   dep: number; arr: number; endName: string; estimated: boolean;
   line?: string; // 버스 구간에서 실제로 고른 노선 (구간의 대표 노선과 다를 수 있다)
+  arsId?: string; routeId?: string; // 버스: 탈 정류장 고유번호·노선 ID (실시간 도착 조회용)
   holidayForSaturday?: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산
 };
 

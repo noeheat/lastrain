@@ -12,6 +12,7 @@ export type RouteLeg = {
   line: string; from: string; to: string; dep: string; arr?: string; endName: string;
   kind?: 'bus'; // 버스면 line은 노선 번호("640"), from·to는 정류장
   estimated?: boolean; // 정류장별 막차가 서로 맞지 않아 이르게 추정한 시각
+  arsId?: string; routeId?: string; // 버스: 탈 정류장 고유번호·노선 ID (막차 시간대 실시간 도착 조회용)
 };
 
 export type Person = {

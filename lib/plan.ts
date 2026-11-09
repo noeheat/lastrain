@@ -12,6 +12,7 @@ const MAX_MIXED_ROUTES = 3; // 지하철+버스 경로도 앞쪽 몇 개만
 export type PlanLeg = {
   line: string; from: string; to: string;
   kind?: 'bus'; // 버스 구간: line은 노선 번호, from·to는 정류장
+  arsId?: string; routeId?: string; // 버스: 실시간 도착 조회용
   dep: string; arr: string; // "HH:MM"
   endName: string;
   estimated: boolean; // 도착 시각이 시간표가 아니라 카카오 소요시간 추정
@@ -69,6 +70,7 @@ export async function planTransfer(
         departMin: chosen[0]!.dep,
         legs: chosen.map((t, i) => ({
           line: t.line ?? route.legs[i]!.line, from: route.legs[i]!.from, to: route.legs[i]!.to, kind: route.legs[i]!.kind,
+          arsId: t.arsId, routeId: t.routeId,
           dep: clock(t.dep), arr: clock(t.arr), endName: t.endName, estimated: t.estimated,
           holidayForSaturday: !!t.holidayForSaturday,
         })),

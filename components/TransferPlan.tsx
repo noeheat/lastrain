@@ -28,9 +28,9 @@ type Props = {
 };
 
 const legsOf = (plan: PlanResult): RouteLeg[] =>
-  plan.legs.map(({ line, from, to, dep, arr, endName, kind, estimated }) => ({
+  plan.legs.map(({ line, from, to, dep, arr, endName, kind, estimated, arsId, routeId }) => ({
     line: kind ? line : lineLabel(line), from, to, dep, arr, endName,
-    ...(kind && { kind, estimated: estimated || undefined }), // 버스 구간 (지하철 추정은 저장하지 않는다)
+    ...(kind && { kind, estimated: estimated || undefined, arsId, routeId }), // 버스 구간 (지하철 추정은 저장하지 않는다)
   }));
 
 /** 노선이 달라 환승이 필요할 때: /api/plan으로 환승 막차를 받아 출발 시각을 채운다. 못 구하면 직접 입력. */
