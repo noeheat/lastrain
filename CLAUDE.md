@@ -38,6 +38,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `lib/rateLimit.ts`: API 호출 제한(IP별 1분, 메모리). 각 `app/api/*/route.ts` 첫 줄에서 `rateLimit(req, '<라우트>')`
 - `lib/nearby.ts`(순수)·`/api/nearby`·`components/NearbyStations`: 현재 위치 근처 지하철역(카카오 SW8) → 출발역
 - `/api/station-lines`·`colocatedLines`(lib/nearby.ts)·`colocatedOptions`(lib/origin.ts): 이름이 같은 역 중 같은 곳(500m 안)의 노선만 한 출발역으로 묶는다
+- `lib/bus.ts`(순수)·`lib/seoulBus.ts`·`/api/bus`·`components/BusChoices`: 서울 버스 막차 — 카카오 버스 구간을 서울 버스 노선별 경유 정류장의 정류장별 막차에 맞춘다(정류장 API lastTm은 기점 막차라 안 씀)
 - `lib/stationSearch.ts`: 역 검색어 다듬기('역' 붙여도 검색)·결과 정렬, `/api/stations`에서 씀
 - `lib/schema.ts`: zod 입력 검증 (클라이언트·서버 공용)
 - `lib/seoul.ts`·`lib/seoulReach.ts`: 1~9호선 막차 — 서울 열린데이터광장 시간표(토·휴일 포함), 열차 번호로 도착역 통과 판정. 실패하면 TAGO(`lib/tago.ts`·`lib/reach.ts`)로 넘어감

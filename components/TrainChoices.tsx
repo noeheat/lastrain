@@ -18,12 +18,13 @@ type Props = {
   dest: StationRef;
   train: string; // 지금 입력된 막차 시각 (선택 표시용)
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (수정 화면에서 직접 고친 값 보호)
-  onChoose: (time: string, route?: RouteLeg[]) => void; // route: 그 시각 열차의 경로 (목록에 없는 시각이면 없음)
+  onChoose: (time: string, route?: RouteLeg[], auto?: boolean) => void; // auto: 응답이 와서 자동으로 고른 값
+  chosen?: { tag: string; detail: string }; // 버스 등 다른 방법으로 정해졌을 때 칸에 보여줄 내용
   invalid?: boolean;
 };
 
 /** 출발역→도착역 막차를 /api/last-train에서 받아 자동으로 채우고, 다른 열차도 고를 수 있게 보여준다. */
-export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid }: Props) {
+export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid, chosen }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
   const daily = dailyTypeCode(serviceDay(new Date()));
 
@@ -55,7 +56,7 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid 
         if (!res.ok || !body) throw new Error(body?.error ?? '막차를 불러오지 못했어요.');
         setState({ status: 'done', result: body as LastTrainResult });
         const result = body as LastTrainResult;
-        if (autoFill && result.last) onChooseRef.current(result.last.time, legOf(result.last));
+        if (autoFill && result.last) onChooseRef.current(result.last.time, legOf(result.last), true);
         else {
           // 예전 저장값처럼 경로가 없으면, 지금 시각과 같은 열차의 경로만 채운다 (시각은 그대로)
           const route = routeFor(result, trainRef.current);
@@ -71,7 +72,7 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid 
   }, [origin.id, dest.id, daily, autoFill]);
 
   const field = {
-    train, invalid,
+    train, invalid, chosen,
     onChange: (t: string) => onChoose(t, state.status === 'done' ? routeFor(state.result, t) : undefined),
   };
   if (state.status === 'loading') return <LastTrainField {...field} status="loading" />;

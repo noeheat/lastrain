@@ -13,11 +13,13 @@ const HHMM = z.string().refine((v) => parseHHMM(v) != null, '시각 형식이 �
 
 export const RouteLegSchema = z.object({
   line: z.string().max(20),
-  from: z.string().max(30),
-  to: z.string().max(30),
+  from: z.string().max(40), // 버스 정류장 이름은 길다 ("서울역버스환승센터.강우규의거터(7번승강장)")
+  to: z.string().max(40),
   dep: HHMM,
   arr: HHMM.optional(),
   endName: z.string().max(30),
+  kind: z.literal('bus').optional(),
+  estimated: z.boolean().optional(),
 });
 
 export const PersonSchema = z.object({

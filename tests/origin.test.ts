@@ -55,3 +55,8 @@ test('colocatedOptions: 카카오가 같은 곳이라고 한 노선만 남긴다
   assert.deepEqual(colocatedOptions([s2, sb], ['2호선', '신분당선']), [s2, sb]);
   assert.deepEqual(colocatedOptions([s2, sb], []), []);
 });
+
+test('SavedSchema: 버스 막차 경로(kind: bus, 긴 정류장 이름, 추정)도 저장한다', () => {
+  const route = [{ kind: 'bus' as const, line: '640', from: '서울역버스환승센터.강우규의거터(7번승강장)', to: '목동역.목동오거리', dep: '00:36', arr: '00:56', endName: '', estimated: true }];
+  assert.ok(SavedSchema.safeParse({ people: [person({ train: '00:36', route })] }).success);
+});

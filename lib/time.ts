@@ -8,7 +8,11 @@ export type Level = 'calm' | 'warn' | 'urgent' | 'missed';
 export type StationRef = { id: string; name: string; line: string };
 
 /** 막차 경로의 한 구간 (환승이면 여러 개). arr: 내릴 역 도착 시각, 모르면 없음 */
-export type RouteLeg = { line: string; from: string; to: string; dep: string; arr?: string; endName: string };
+export type RouteLeg = {
+  line: string; from: string; to: string; dep: string; arr?: string; endName: string;
+  kind?: 'bus'; // 버스면 line은 노선 번호("640"), from·to는 정류장
+  estimated?: boolean; // 정류장별 막차가 서로 맞지 않아 이르게 추정한 시각
+};
 
 export type Person = {
   name: string;

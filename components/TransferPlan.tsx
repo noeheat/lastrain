@@ -22,7 +22,8 @@ type Props = {
   destLine?: string;
   train: string;
   autoFill: boolean; // 역을 새로 골랐을 때만 자동 막차로 덮어쓴다 (TrainChoices와 같음)
-  onChoose: (time: string, route?: RouteLeg[]) => void; // route: 자동 막차와 같은 시각일 때 환승 경로
+  onChoose: (time: string, route?: RouteLeg[], auto?: boolean) => void; // auto: 응답이 와서 자동으로 고른 값
+  chosen?: { tag: string; detail: string }; // 버스 등 다른 방법으로 정해졌을 때 칸에 보여줄 내용
   invalid?: boolean;
 };
 
@@ -30,7 +31,7 @@ const legsOf = (plan: PlanResult): RouteLeg[] =>
   plan.legs.map(({ line, from, to, dep, arr, endName }) => ({ line: lineLabel(line), from, to, dep, arr, endName }));
 
 /** 노선이 달라 환승이 필요할 때: /api/plan으로 환승 막차를 받아 출발 시각을 채운다. 못 구하면 직접 입력. */
-export function TransferPlan({ origin, dest, originLine, destLine, train, autoFill, onChoose, invalid }: Props) {
+export function TransferPlan({ origin, dest, originLine, destLine, train, autoFill, onChoose, invalid, chosen }: Props) {
   const [state, setState] = useState<State>({ status: 'loading' });
   const daily = dailyTypeCode(serviceDay(new Date()));
 
@@ -53,7 +54,7 @@ export function TransferPlan({ origin, dest, originLine, destLine, train, autoFi
         if (!res.ok || !body) throw new Error(body?.error ?? '환승 경로를 불러오지 못했어요.');
         const { plan, reasons = [] } = body as { plan: PlanResult | null; reasons?: string[] };
         setState({ status: 'done', plan, reasons });
-        if (plan && (autoFill || trainRef.current === plan.depart)) onChooseRef.current(plan.depart, legsOf(plan));
+        if (plan && (autoFill || trainRef.current === plan.depart)) onChooseRef.current(plan.depart, legsOf(plan), autoFill);
       } catch (e) {
         if (ctrl.signal.aborted) return;
         const offline = e instanceof TypeError; // fetch 자체 실패 = 네트워크 문제
@@ -64,7 +65,7 @@ export function TransferPlan({ origin, dest, originLine, destLine, train, autoFi
   }, [origin, dest, originLine, destLine, daily, autoFill]);
 
   const field = {
-    train, invalid,
+    train, invalid, chosen,
     onChange: (t: string) => onChoose(t, state.status === 'done' && state.plan?.depart === t ? legsOf(state.plan) : undefined),
   };
   if (state.status === 'loading') return <LastTrainField {...field} status="loading" />;

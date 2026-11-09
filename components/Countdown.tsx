@@ -164,8 +164,13 @@ function Focus({ item, count, index, onStep, onEdit }: FocusProps) {
     sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
   } else {
     clock = formatRemaining(row.msToTrain);
-    const what = one ? `${lineLabel(one.line)} ${one.endName}행 막차` : route ? `막차 · 환승 ${route.length - 1}번` : '막차';
-    sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
+    if (one?.kind === 'bus') {
+      // 버스는 역이 아니라 정류장에서 탄다. 정류장별 막차는 시간표상 예정 시각
+      sub = `${one.from}에서 ${formatClock(row.trainAt)}에 떠나는 ${one.line}번 버스 막차${one.estimated ? ' (추정)' : ''}`;
+    } else {
+      const what = one ? `${lineLabel(one.line)} ${one.endName}행 막차` : route ? `막차 · 환승 ${route.length - 1}번` : '막차';
+      sub = `${row.station}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
+    }
   }
   const isText = !row || row.missed;
   const arrow = 'min-h-11 min-w-11 text-[1.6rem] leading-none text-[var(--muted)]';
