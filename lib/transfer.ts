@@ -30,16 +30,16 @@ export type Leg = { line: string; from: string; to: string; minutes: number };
 /** walks[i]: i번째 구간을 타기 전 환승 도보(분). walks[0]은 0 (출발역 도보는 사람마다 따로 입력) */
 export type SubwayRoute = { legs: Leg[]; walks: number[] };
 
-type KakaoStep = {
+export type KakaoStep = {
   properties?: {
     type?: string;
     time?: number; // 초
     guidance?: string;
     stops?: { name?: string }[];
-    vehicles?: { name?: string }[];
+    vehicles?: { name?: string; type?: string }[];
   };
 };
-type KakaoBody = { routes?: { steps?: KakaoStep[] }[] };
+export type KakaoBody = { routes?: { steps?: KakaoStep[] }[] };
 
 const toMin = (sec: number | undefined) => Math.ceil((sec ?? 0) / 60);
 

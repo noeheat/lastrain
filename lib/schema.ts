@@ -65,6 +65,14 @@ export const NearbyQuerySchema = z.object({
   lng: z.coerce.number().min(124).max(132),
 });
 
+// 버스 막차 (출발역·도착역 이름과 노선, /api/plan과 같음)
+export const BusQuerySchema = z.object({
+  origin: z.string().trim().min(1).max(30),
+  dest: z.string().trim().min(1).max(30),
+  originLine: z.string().trim().min(1).max(20).optional(),
+  destLine: z.string().trim().min(1).max(20).optional(),
+});
+
 export const StationLinesQuerySchema = z.object({
   name: z.string().trim().min(1).max(30),
   line: z.string().trim().min(1).max(20),

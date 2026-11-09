@@ -1,0 +1,74 @@
+// 서울 버스 API 호출과 버스 막차 계산 (서버 전용: data.go.kr 키를 쓰므로 app/api에서만 import한다)
+// data.go.kr "서울특별시_노선정보조회 서비스" (TAGO와 같은 키, 활용신청 2026-11)
+
+import { busName, busOnlyLegs, matchStops, type BusStop } from './bus';
+import { stationCoord, transitRoutes } from './kakao';
+
+const BASE = 'http://ws.bus.go.kr/api/rest';
+const DAY = 60 * 60 * 24;
+
+async function get<T>(path: string, params: Record<string, string>): Promise<T[]> {
+  const key = process.env.TAGO_SERVICE_KEY;
+  if (!key) throw new Error('서버에 TAGO_SERVICE_KEY가 설정되지 않았어요');
+  // 노선·정류장 목록과 정류장별 막차는 거의 안 바뀌므로 하루 캐시
+  const res = await fetch(`${BASE}/${path}?${new URLSearchParams({ serviceKey: key, resultType: 'json', ...params })}`, {
+    next: { revalidate: DAY }, signal: AbortSignal.timeout(8000),
+  });
+  const body = await res.json().catch(() => null);
+  const code = body?.msgHeader?.headerCd;
+  if (!res.ok || code == null) throw new Error(`서울 버스 응답 오류 (HTTP ${res.status})`);
+  if (code === '4') return []; // 결과 없음
+  if (code !== '0') throw new Error(`서울 버스 오류 ${code} ${body.msgHeader.headerMsg ?? ''}`);
+  return body.msgBody?.itemList ?? [];
+}
+
+/** 노선 번호 → 서울 노선 ID. 서울 노선이 아니면(경기 직행 등) null */
+async function routeId(name: string): Promise<string | null> {
+  const list = await get<{ busRouteId?: string; busRouteNm?: string }>('busRouteInfo/getBusRouteList', { strSrch: name });
+  return list.find((r) => r.busRouteNm === name)?.busRouteId ?? null;
+}
+
+const routeStops = (id: string) => get<BusStop>('busRouteInfo/getStaionByRoute', { busRouteId: id });
+
+/** 버스 막차 하나: 탈 정류장을 떠나는 막차 예정 시각(dep)과 내릴 정류장 도착 예정(arr) */
+export type BusOption = {
+  route: string; from: string; to: string;
+  dep: string; arr: string; depMin: number; // "HH:MM", 운행일 기준 분
+  estimated: boolean; // 정류장별 막차 값이 서로 맞지 않아 내릴 곳 기준으로 추정
+};
+
+const clock = (min: number) => {
+  const x = min % (24 * 60);
+  return `${String(Math.floor(x / 60)).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`;
+};
+
+/**
+ * 출발역 → 도착역을 버스 한 번으로 가는 막차들 (늦게 떠나는 순). 서울 버스만.
+ * reasons: 결과가 없을 때 이유
+ */
+export async function busOptions(
+  origin: string, dest: string, originLine?: string, destLine?: string,
+): Promise<{ options: BusOption[]; reasons: string[] }> {
+  const [a, b] = await Promise.all([stationCoord(origin, originLine), stationCoord(dest, destLine)]);
+  if (!a || !b) return { options: [], reasons: ['역 위치를 찾지 못했어요'] };
+  const legs = busOnlyLegs(await transitRoutes(a, b));
+  if (legs.length === 0) return { options: [], reasons: ['버스 한 번으로 가는 경로가 없어요'] };
+
+  const tries = legs.flatMap((leg) => leg.names.map((raw) => ({ leg, name: busName(raw) })))
+    .filter((x): x is { leg: typeof legs[number]; name: string } => !!x.name);
+  const results = await Promise.allSettled(tries.map(async ({ leg, name }): Promise<BusOption | null> => {
+    const id = await routeId(name);
+    if (!id) return null;
+    const m = matchStops(await routeStops(id), leg.from, leg.to, leg.minutes);
+    return m && { route: name, from: leg.from, to: leg.to, dep: clock(m.dep), arr: clock(m.arr), depMin: m.dep, estimated: m.estimated };
+  }));
+  results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });
+
+  // 같은 노선·탈 곳은 하나만 (카카오가 여러 경로에 같은 버스를 준다)
+  const seen = new Set<string>();
+  const options = results
+    .flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []))
+    .sort((x, y) => y.depMin - x.depMin)
+    .filter((o) => !seen.has(`${o.route}|${o.from}`) && seen.add(`${o.route}|${o.from}`));
+  return { options, reasons: options.length ? [] : ['서울 버스 막차를 찾지 못했어요 (서울 밖 노선이거나 정류장을 맞추지 못함)'] };
+}
