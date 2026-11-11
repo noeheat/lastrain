@@ -27,7 +27,7 @@ async function get<T>(op: string, params: Record<string, string>): Promise<T[]> 
   // 역 목록·시간표는 거의 안 바뀌므로 하루 캐시 (TAGO 일일 호출 한도 절약)
   // TAGO는 가끔 한 요청만 응답 없이 멈춘다. 2.5초 안에 답이 없으면 하나 더 보내고, 각 시도는 8초에 끊는다
   // Next는 진행 중인 같은 캐시 요청을 하나로 합치므로, 두 번째 시도는 no-store로 보내야 실제로 다시 나간다
-  const res = await hedge(
+  let res = await hedge(
     (attempt) => fetch(`${BASE}/${op}?${qs}`, {
       ...(attempt === 1 ? { next: { revalidate: DAY } } : { cache: 'no-store' as const }),
       signal: AbortSignal.timeout(8000),
@@ -36,7 +36,12 @@ async function get<T>(op: string, params: Record<string, string>): Promise<T[]> 
     HEDGE_MS,
   ).catch(() => null);
   if (!res) throw new TagoError('TAGO 시간표 서버에 연결하지 못했어요');
-  const body = await res.json().catch(() => null);
+  let body = await res.json().catch(() => null);
+  // 오류 응답(호출 한도 초과 등)도 HTTP 200이라 Next가 하루 캐시하므로, 오류면 캐시를 건너뛰고 한 번 더 받는다
+  if (body?.response?.header?.resultCode !== '00') {
+    const again = await fetch(`${BASE}/${op}?${qs}`, { cache: 'no-store', signal: AbortSignal.timeout(8000) }).catch(() => null);
+    if (again) { res = again; body = await again.json().catch(() => null); }
+  }
   const header = body?.response?.header;
   if (!res.ok || !header) throw new TagoError(`TAGO 응답 오류 (HTTP ${res.status})`);
   if (header.resultCode !== '00') throw new TagoError(`TAGO 오류 ${header.resultCode} ${header.resultMsg}`);

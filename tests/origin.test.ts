@@ -39,13 +39,15 @@ test('SavedSchema: 예전 2명 저장값도, 1명·origin 포함 새 저장값�
   assert.equal(SavedSchema.safeParse({ people: Array.from({ length: 7 }, () => person({})) }).success, false);
 });
 
-test('SavedSchema: 막차 경로(route)를 저장하고 읽는다, 잘못된 시각은 거절', () => {
+test('SavedSchema: 막차 경로(route)를 저장하고 읽는다, 잘못된 시각이면 경로만 버린다', () => {
   const route = [
     { line: '신분당선', from: '강남', to: '논현', dep: '00:23', arr: '00:27', endName: '신사' },
     { line: '7호선', from: '논현', to: '이수', dep: '00:36', arr: '00:45', endName: '신풍' },
   ];
-  assert.ok(SavedSchema.safeParse({ people: [person({ train: '00:23', route })] }).success);
-  assert.equal(SavedSchema.safeParse({ people: [person({ route: [{ ...route[0]!, dep: '25:00' }] })] }).success, false);
+  const ok = SavedSchema.safeParse({ people: [person({ train: '00:23', route })] });
+  assert.ok(ok.success && ok.data.people[0]!.route?.length === 2);
+  const bad = SavedSchema.safeParse({ people: [person({ route: [{ ...route[0]!, dep: '25:00' }] })] });
+  assert.ok(bad.success && bad.data.people[0]!.route === undefined);
 });
 
 test('colocatedOptions: 카카오가 같은 곳이라고 한 노선만 남긴다 (표기 차이 무시)', () => {
@@ -59,4 +61,14 @@ test('colocatedOptions: 카카오가 같은 곳이라고 한 노선만 남긴다
 test('SavedSchema: 버스 막차 경로(kind: bus, 긴 정류장 이름, 추정)도 저장한다', () => {
   const route = [{ kind: 'bus' as const, line: '640', from: '서울역버스환승센터.강우규의거터(7번승강장)', to: '목동역.목동오거리', dep: '00:36', arr: '00:56', endName: '', estimated: true }];
   assert.ok(SavedSchema.safeParse({ people: [person({ train: '00:36', route })] }).success);
+});
+
+test('SavedSchema: 경로 형식이 틀려도 경로만 버리고 사람은 저장·읽기된다 (미정차 정류장 arsId "0", 긴 정류장 이름)', () => {
+  const leg = { kind: 'bus' as const, line: '640', from: 'A', to: 'B', dep: '00:36', endName: '' };
+  const bad = SavedSchema.safeParse({ people: [person({ train: '00:36', route: [{ ...leg, arsId: '0' }] }), person({ name: '지영' })] });
+  assert.ok(bad.success);
+  assert.equal(bad.data.people.length, 2);
+  assert.equal(bad.data.people[0]!.route, undefined);
+  const long = SavedSchema.safeParse({ people: [person({ route: [{ ...leg, from: 'ㄱ'.repeat(45) }] })] });
+  assert.ok(long.success && long.data.people[0]!.route === undefined);
 });

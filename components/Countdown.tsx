@@ -158,8 +158,16 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
   const one = route?.length === 1 ? route[0]! : null;
   // 첫 구간이 버스면 실시간 막차 도착을 받아, 예정보다 일찍 오면 카운트다운을 앞당긴다 (늦어지면 안내만)
   const firstBus = route?.[0]?.kind === 'bus' && route[0].arsId && route[0].routeId ? route[0] : null;
+  // 한 번 본 실시간 막차 시각은 기억한다. 막차가 지나가면 실시간 응답에서 사라지는데, 그때 시간표로 되돌아가면 안 된다
   const [liveFirst, setLiveFirst] = useState<Date | null>(null);
+  const [liveEnded, setLiveEnded] = useState(false);
+  const onFirstLive = ({ lastAt, ended }: { lastAt: Date | null; ended: boolean }) => {
+    if (lastAt) setLiveFirst(lastAt);
+    setLiveEnded(ended);
+  };
   const earlier = row && !row.missed && liveFirst && liveFirst < row.trainAt ? liveFirst : null;
+  // 실시간 막차가 1분 넘게 지났거나(곧 도착은 아직 탈 수 있다), 오늘 운행이 끝났으면 놓침
+  const livePassed = !!row && !row.missed && (liveEnded || (!!earlier && earlier.getTime() < now.getTime() - 60_000));
 
   let clock: string;
   let sub: string;
@@ -169,6 +177,11 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
   } else if (row.missed) {
     clock = '놓침';
     sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
+  } else if (livePassed) {
+    clock = '놓침';
+    sub = earlier
+      ? `실시간으로 막차가 ${formatClock(earlier)}에 지나갔어요 (예정 ${formatClock(row.trainAt)}보다 일찍) · 택시나 심야버스를 찾아보세요`
+      : '실시간으로 보니 오늘 운행이 끝났어요 · 택시나 심야버스를 찾아보세요';
   } else {
     clock = formatRemaining(earlier ? earlier.getTime() - now.getTime() : row.msToTrain);
     if (one?.kind === 'bus') {
@@ -181,7 +194,7 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
       sub = `${where}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
     }
   }
-  const isText = !row || row.missed;
+  const isText = !row || row.missed || livePassed;
   const arrow = 'min-h-11 min-w-11 text-[1.6rem] leading-none text-[var(--muted)]';
 
   return (
@@ -210,9 +223,9 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
         {clock}
       </p>
       <p className="m-0 text-[0.95rem] text-[var(--muted)]">{sub}</p>
-      {earlier && <p className="m-0 mt-1 text-[0.85rem] font-semibold text-[var(--state)]">실시간 막차가 예정보다 일찍 와서 카운트다운을 앞당겼어요</p>}
+      {earlier && !livePassed && <p className="m-0 mt-1 text-[0.85rem] font-semibold text-[var(--state)]">실시간 막차가 예정보다 일찍 와서 카운트다운을 앞당겼어요</p>}
       {row && !row.missed && one && firstBus && (
-        <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLastAt={setLiveFirst} />
+        <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLive={onFirstLive} />
       )}
       {row && !row.missed && route && route.length > 1 && (
         <ol className="mx-auto mt-3 max-w-[340px] space-y-1 text-left text-[0.85rem]">
@@ -224,7 +237,7 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
                 const due = trainTime(l.dep, now);
                 return due && (
                   <BusLive arsId={l.arsId} routeId={l.routeId} line={l.line} due={due} now={now}
-                    onLastAt={i === 0 ? setLiveFirst : undefined} />
+                    onLive={i === 0 ? onFirstLive : undefined} />
                 );
               })()}
             </li>

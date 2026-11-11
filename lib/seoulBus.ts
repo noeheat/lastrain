@@ -11,17 +11,24 @@ const DAY = 60 * 60 * 24;
 async function get<T>(path: string, params: Record<string, string>, revalidate = DAY): Promise<T[]> {
   const key = process.env.TAGO_SERVICE_KEY;
   if (!key) throw new Error('서버에 TAGO_SERVICE_KEY가 설정되지 않았어요');
-  // 노선·정류장 목록과 정류장별 막차는 거의 안 바뀌므로 하루 캐시 (실시간 도착은 30초)
-  const res = await fetch(`${BASE}/${path}?${new URLSearchParams({ serviceKey: key, resultType: 'json', ...params })}`, {
-    next: { revalidate }, signal: AbortSignal.timeout(8000),
-  });
-  const body = await res.json().catch(() => null);
+  // 노선·정류장 목록과 정류장별 막차는 거의 안 바뀌므로 하루 캐시 (실시간 도착은 30초).
+  // 오류 응답(호출 한도 초과 등)도 HTTP 200이라 Next가 그대로 캐시하므로, 오류면 캐시를 건너뛰고 한 번 더 받는다
+  const url = `${BASE}/${path}?${new URLSearchParams({ serviceKey: key, resultType: 'json', ...params })}`;
+  let res = await fetch(url, { next: { revalidate }, signal: AbortSignal.timeout(8000) });
+  let body = await res.json().catch(() => null);
+  if (!['0', '4'].includes(body?.msgHeader?.headerCd)) {
+    res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+    body = await res.json().catch(() => null);
+  }
   const code = body?.msgHeader?.headerCd;
   if (!res.ok || code == null) throw new Error(`서울 버스 응답 오류 (HTTP ${res.status})`);
   if (code === '4') return []; // 결과 없음
   if (code !== '0') throw new Error(`서울 버스 오류 ${code} ${body.msgHeader.headerMsg ?? ''}`);
   return body.msgBody?.itemList ?? [];
 }
+
+/** 실시간 조회에 쓸 수 있는 정류장 고유번호만 (미정차 정류장은 "0") */
+const validArs = (ars?: string) => (ars && /^\d{5}$/.test(ars) ? ars : undefined);
 
 /** 노선 번호 → 서울 노선 ID. 서울 노선이 아니면(경기 직행 등) null */
 async function routeId(name: string): Promise<string | null> {
@@ -47,7 +54,7 @@ export async function busLegTrains(leg: Leg): Promise<LegTrain[] | null> {
     if (!id) return [];
     const [stops, term] = await Promise.all([routeStops(id), routeTerm(id)]);
     const m = matchStops(stops, leg.from, leg.to, leg.minutes);
-    return m ? busTrains(m, term, name, { arsId: m.board.arsId, routeId: id }) : [];
+    return m ? busTrains(m, term, name, { arsId: validArs(m.board.arsId), routeId: id }) : [];
   }));
   results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });
   const trains = results.flatMap((r) => (r.status === 'fulfilled' ? r.value : [])).sort((a, b) => a.dep - b.dep);
@@ -87,7 +94,7 @@ export async function busOptions(
     const m = matchStops(await routeStops(id), leg.from, leg.to, leg.minutes);
     return m && {
       route: name, from: leg.from, to: leg.to, dep: clock(m.dep), arr: clock(m.arr), depMin: m.dep, estimated: m.estimated,
-      arsId: m.board.arsId, routeId: id,
+      arsId: validArs(m.board.arsId), routeId: id,
     };
   }));
   results.forEach((r) => { if (r.status === 'rejected') console.error(r.reason); });

@@ -16,9 +16,15 @@ export const isSeoulLine = (line: string) => /^[1-9]호선$/.test(line);
 async function get<T>(service: string, path: string): Promise<T[]> {
   const key = process.env.SEOUL_OPENAPI_KEY;
   if (!key) throw new Error('서버에 SEOUL_OPENAPI_KEY가 설정되지 않았어요');
-  // 역 정보·시간표는 거의 안 바뀌므로 하루 캐시
-  const res = await fetch(`${BASE}/${key}/json/${service}/1/1000/${path}/`, { next: { revalidate: DAY } });
-  const body = await res.json().catch(() => null);
+  // 역 정보·시간표는 거의 안 바뀌므로 하루 캐시. 단 오류 응답(호출 한도 초과 등)도 HTTP 200이라 Next가 그대로
+  // 하루 캐시하므로, 오류면 캐시를 건너뛰고 한 번 더 받는다
+  const url = `${BASE}/${key}/json/${service}/1/1000/${path}/`;
+  let res = await fetch(url, { next: { revalidate: DAY } });
+  let body = await res.json().catch(() => null);
+  if (!body?.[service] && body?.RESULT?.CODE !== 'INFO-200') {
+    res = await fetch(url, { cache: 'no-store' });
+    body = await res.json().catch(() => null);
+  }
   const data = body?.[service];
   if (data) return data.row ?? [];
   const code = body?.RESULT?.CODE;

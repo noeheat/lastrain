@@ -32,7 +32,9 @@ export const PersonSchema = z.object({
   // 검색으로 고른 역 (직접 입력했거나 v2 2단계 이전 저장값이면 없음)
   origin: StationSchema.optional(),
   dest: StationSchema.optional(),
-  route: z.array(RouteLegSchema).min(1).max(5).optional(),
+  // 경로는 화면 표시·실시간용 부가 정보라, 형식이 맞지 않으면 경로만 버리고 저장·읽기는 계속한다
+  // (그러지 않으면 사람 저장이 막히거나, 저장값 전체를 못 읽어 모든 사람이 사라진다)
+  route: z.array(RouteLegSchema).min(1).max(5).optional().catch(undefined),
 });
 
 export const MAX_PEOPLE = 6;

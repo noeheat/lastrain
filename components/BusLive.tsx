@@ -12,20 +12,21 @@ type Props = {
   line: string; // 노선 번호 (화면 문구용)
   due: Date; // 시간표상 막차 시각
   now: Date;
-  onLastAt?: (at: Date | null) => void; // 실시간으로 본 막차 도착 시각 (막차가 안 보이면 null)
+  // 실시간 상태: lastAt은 지금 보이는 막차 도착 시각(안 보이면 null), ended는 오늘 운행이 끝남
+  onLive?: (s: { lastAt: Date | null; ended: boolean }) => void;
 };
 
 /**
  * 버스 막차 실시간 줄. 예정 막차 60분 전부터 정류장 실시간 도착을 확인한다
  * (15분 넘게 남으면 1분, 그 안이면 25초마다, 화면이 꺼져 있으면 멈춤).
  */
-export function BusLive({ arsId, routeId, line, due, now, onLastAt }: Props) {
+export function BusLive({ arsId, routeId, line, due, now, onLive }: Props) {
   const [live, setLive] = useState<{ data: Live | null; at: number } | null>(null);
   const [error, setError] = useState(false);
-  const onLastAtRef = useRef(onLastAt);
+  const onLiveRef = useRef(onLive);
   const nowRef = useRef(now); // 화면과 같은 시계 (디버그 ?now= 포함)로 도착 시각을 계산한다
   useEffect(() => {
-    onLastAtRef.current = onLastAt;
+    onLiveRef.current = onLive;
     nowRef.current = now;
   });
 
@@ -62,12 +63,13 @@ export function BusLive({ arsId, routeId, line, due, now, onLastAt }: Props) {
     };
   }, [active, fast, arsId, routeId]);
 
-  // 실시간으로 본 막차 도착 시각을 부모에 알린다 (앞당기기용)
+  // 실시간 막차 도착 시각과 운행 종료를 부모에 알린다 (앞당기기·놓침 판정용)
   const lastBus = live?.data?.status === 'running' ? live.data.buses.find((b) => b.last) : undefined;
   const lastAt = lastBus && live ? live.at + lastBus.sec * 1000 : null;
+  const ended = live?.data?.status === 'ended';
   useEffect(() => {
-    onLastAtRef.current?.(lastAt != null ? new Date(lastAt) : null);
-  }, [lastAt]);
+    onLiveRef.current?.({ lastAt: lastAt != null ? new Date(lastAt) : null, ended });
+  }, [lastAt, ended]);
 
   if (!active || (!live && !error)) return null;
   const cls = 'm-0 mt-1 text-[0.85rem]';

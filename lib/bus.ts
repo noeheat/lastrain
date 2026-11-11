@@ -17,7 +17,7 @@ export type BusLeg = {
 };
 
 /** 서울 버스 API 노선별 경유 정류장의 쓰는 필드 */
-export type BusStop = { seq: string; stationNm: string; arsId?: string; lastTm?: string; direction?: string };
+export type BusStop = { seq: string; stationNm: string; arsId?: string; beginTm?: string; lastTm?: string; direction?: string };
 
 /** 막차로 볼 수 있는 가장 이른 시각. 출근·주간 노선(막차 09:45 등)을 거른다 */
 const EARLIEST_LAST_MIN = 20 * 60;
@@ -73,7 +73,7 @@ export function busOnlyLegs(body: KakaoBody): BusLeg[] {
  */
 export function matchStops(
   stops: BusStop[], from: string, to: string, legMinutes: number,
-): { board: BusStop; alight: BusStop; dep: number; arr: number; estimated: boolean } | null {
+): { board: BusStop; alight: BusStop; dep: number; arr: number; estimated: boolean; first: number | null } | null {
   const f = normStop(from);
   const t = normStop(to);
   let best: { i: number; j: number } | null = null;
@@ -92,22 +92,25 @@ export function matchStops(
   const estimated = arr < boardLast;
   const dep = estimated ? arr - legMinutes : boardLast;
   if (dep < EARLIEST_LAST_MIN || arr - dep > MAX_RIDE_MIN) return null;
-  return { board, alight, dep, arr, estimated };
+  return { board, alight, dep, arr, estimated, first: parseBusTime(board.beginTm) }; // first: 탈 정류장 첫차
 }
 
 const BUS_WINDOW_MIN = 120; // 막차 전 몇 분 안의 버스까지 만들지 (환승 역산에 쓰는 범위)
 
 /**
- * 버스 구간 열차 목록(환승 역산용). 버스는 시간표가 없어서 정류장별 막차와 배차 간격으로 그 전 버스들을 만든다.
+ * 버스 구간 열차 목록(환승 역산용). 버스는 시간표가 없어서 정류장별 막차와 배차 간격으로 그 전 버스들을 만든다 (첫차 전은 빼고).
  * 도착 시각은 막차의 소요시간을 그대로 쓰는 추정이라 estimated(환승 여유가 붙는다). 배차를 모르면 막차만.
  */
 export function busTrains(
-  last: { dep: number; arr: number }, termMin: number, line: string, ids: { arsId?: string; routeId?: string } = {},
+  last: { dep: number; arr: number; first?: number | null }, termMin: number, line: string,
+  ids: { arsId?: string; routeId?: string } = {},
 ): LegTrain[] {
   const ride = last.arr - last.dep;
   const step = Number.isFinite(termMin) && termMin > 0 ? termMin : Infinity;
+  // 탈 정류장 첫차보다 이른 버스는 만들지 않는다 (23:58에 시작하는 심야버스에 22시대 버스가 생기지 않게)
+  const from = Math.max(last.dep - BUS_WINDOW_MIN, last.first != null && last.first <= last.dep ? last.first : -Infinity);
   const out: LegTrain[] = [];
-  for (let dep = last.dep; dep >= last.dep - BUS_WINDOW_MIN; dep -= step) {
+  for (let dep = last.dep; dep >= from; dep -= step) {
     out.unshift({ dep, arr: dep + ride, endName: '', estimated: true, line, ...ids });
     if (step === Infinity) break;
   }

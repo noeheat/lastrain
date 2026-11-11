@@ -101,3 +101,11 @@ test('parseBusLive: 운행종료·출발대기는 상태로, 다가오는 버스
   });
   assert.equal(parseBusLive(undefined), null);
 });
+
+test('busTrains: 탈 정류장 첫차보다 이른 버스는 만들지 않는다 (심야버스)', () => {
+  // 이 정류장 첫차 01:30, 막차 02:51, 배차 30분 → 01:51·02:21·02:51만 (2시간 창이면 00:51까지 만들었을 것)
+  const t = busTrains({ dep: 26 * 60 + 51, arr: 27 * 60 + 5, first: 25 * 60 + 30 }, 30, 'N26');
+  assert.deepEqual(t.map((x) => x.dep), [25 * 60 + 51, 26 * 60 + 21, 26 * 60 + 51]);
+  // 낮부터 다니는 노선(첫차 05:23)은 막차 전 2시간 그대로
+  assert.equal(busTrains({ dep: 24 * 60, arr: 24 * 60 + 20, first: 5 * 60 + 23 }, 30, '640').length, 5);
+});
