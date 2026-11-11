@@ -1,0 +1,464 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T09:40:21.645Z",
+  "title": "Design System: 막차 카운트다운",
+  "extensions": {
+    "colorMeta": {
+      "field-ink": {
+        "role": "neutral",
+        "displayName": "흰 잉크",
+        "canonical": "#ffffff",
+        "oklch": "oklch(100% 0 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0 89.9)",
+          "oklch(25% 0 89.9)",
+          "oklch(35% 0 89.9)",
+          "oklch(45% 0 89.9)",
+          "oklch(55% 0 89.9)",
+          "oklch(65% 0 89.9)",
+          "oklch(80% 0 89.9)",
+          "oklch(95% 0 89.9)"
+        ]
+      },
+      "urgent-shade": {
+        "role": "secondary",
+        "displayName": "급함 그늘",
+        "canonical": "#8f1020",
+        "oklch": "oklch(41.8% 0.158 22.5)",
+        "tonalRamp": [
+          "oklch(15% 0.032 22.5)",
+          "oklch(25% 0.063 22.5)",
+          "oklch(35% 0.095 22.5)",
+          "oklch(45% 0.127 22.5)",
+          "oklch(55% 0.158 22.5)",
+          "oklch(65% 0.127 22.5)",
+          "oklch(80% 0.079 22.5)",
+          "oklch(95% 0.032 22.5)"
+        ]
+      },
+      "field-missed": {
+        "role": "secondary",
+        "displayName": "놓침 바탕",
+        "canonical": "#15171b",
+        "oklch": "oklch(20.4% 0.009 264.4)",
+        "tonalRamp": [
+          "oklch(15% 0.002 264.4)",
+          "oklch(25% 0.003 264.4)",
+          "oklch(35% 0.005 264.4)",
+          "oklch(45% 0.007 264.4)",
+          "oklch(55% 0.009 264.4)",
+          "oklch(65% 0.007 264.4)",
+          "oklch(80% 0.004 264.4)",
+          "oklch(95% 0.002 264.4)"
+        ]
+      },
+      "field-neutral": {
+        "role": "primary",
+        "displayName": "중립 바탕",
+        "canonical": "#1b1e24",
+        "oklch": "oklch(23.5% 0.012 264.3)",
+        "tonalRamp": [
+          "oklch(15% 0.002 264.3)",
+          "oklch(25% 0.005 264.3)",
+          "oklch(35% 0.007 264.3)",
+          "oklch(45% 0.01 264.3)",
+          "oklch(55% 0.012 264.3)",
+          "oklch(65% 0.01 264.3)",
+          "oklch(80% 0.006 264.3)",
+          "oklch(95% 0.002 264.3)"
+        ]
+      },
+      "field-error": {
+        "role": "secondary",
+        "displayName": "노선색 위 오류",
+        "canonical": "#ffe1e1",
+        "oklch": "oklch(93.4% 0.033 17.8)",
+        "tonalRamp": [
+          "oklch(15% 0.007 17.8)",
+          "oklch(25% 0.013 17.8)",
+          "oklch(35% 0.02 17.8)",
+          "oklch(45% 0.027 17.8)",
+          "oklch(55% 0.033 17.8)",
+          "oklch(65% 0.027 17.8)",
+          "oklch(80% 0.017 17.8)",
+          "oklch(95% 0.007 17.8)"
+        ]
+      },
+      "night-floor": {
+        "role": "neutral",
+        "displayName": "밤 바닥",
+        "canonical": "#0b0d10",
+        "oklch": "oklch(15.8% 0.007 258.4)",
+        "tonalRamp": [
+          "oklch(15% 0.001 258.4)",
+          "oklch(25% 0.003 258.4)",
+          "oklch(35% 0.004 258.4)",
+          "oklch(45% 0.006 258.4)",
+          "oklch(55% 0.007 258.4)",
+          "oklch(65% 0.006 258.4)",
+          "oklch(80% 0.004 258.4)",
+          "oklch(95% 0.001 258.4)"
+        ]
+      },
+      "sheet-surface": {
+        "role": "neutral",
+        "displayName": "시트 표면",
+        "canonical": "#16181d",
+        "oklch": "oklch(20.9% 0.01 268.2)",
+        "tonalRamp": [
+          "oklch(15% 0.002 268.2)",
+          "oklch(25% 0.004 268.2)",
+          "oklch(35% 0.006 268.2)",
+          "oklch(45% 0.008 268.2)",
+          "oklch(55% 0.01 268.2)",
+          "oklch(65% 0.008 268.2)",
+          "oklch(80% 0.005 268.2)",
+          "oklch(95% 0.002 268.2)"
+        ]
+      },
+      "sheet-ink": {
+        "role": "neutral",
+        "displayName": "시트 잉크",
+        "canonical": "#f4f5f7",
+        "oklch": "oklch(97% 0.003 264.5)",
+        "tonalRamp": [
+          "oklch(15% 0.001 264.5)",
+          "oklch(25% 0.001 264.5)",
+          "oklch(35% 0.002 264.5)",
+          "oklch(45% 0.002 264.5)",
+          "oklch(55% 0.003 264.5)",
+          "oklch(65% 0.002 264.5)",
+          "oklch(80% 0.001 264.5)",
+          "oklch(95% 0.001 264.5)"
+        ]
+      },
+      "sheet-muted": {
+        "role": "neutral",
+        "displayName": "시트 보조",
+        "canonical": "#a3a8b3",
+        "oklch": "oklch(73.1% 0.017 266.2)",
+        "tonalRamp": [
+          "oklch(15% 0.003 266.2)",
+          "oklch(25% 0.007 266.2)",
+          "oklch(35% 0.01 266.2)",
+          "oklch(45% 0.013 266.2)",
+          "oklch(55% 0.017 266.2)",
+          "oklch(65% 0.013 266.2)",
+          "oklch(80% 0.008 266.2)",
+          "oklch(95% 0.003 266.2)"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "가는 선",
+        "canonical": "#2c3038",
+        "oklch": "oklch(30.9% 0.015 264.3)",
+        "tonalRamp": [
+          "oklch(15% 0.003 264.3)",
+          "oklch(25% 0.006 264.3)",
+          "oklch(35% 0.009 264.3)",
+          "oklch(45% 0.012 264.3)",
+          "oklch(55% 0.015 264.3)",
+          "oklch(65% 0.012 264.3)",
+          "oklch(80% 0.008 264.3)",
+          "oklch(95% 0.003 264.3)"
+        ]
+      },
+      "sheet-accent": {
+        "role": "tertiary",
+        "displayName": "시트 강조",
+        "canonical": "#9ecbff",
+        "oklch": "oklch(82.9% 0.088 252.5)",
+        "tonalRamp": [
+          "oklch(15% 0.018 252.5)",
+          "oklch(25% 0.035 252.5)",
+          "oklch(35% 0.053 252.5)",
+          "oklch(45% 0.07 252.5)",
+          "oklch(55% 0.088 252.5)",
+          "oklch(65% 0.07 252.5)",
+          "oklch(80% 0.044 252.5)",
+          "oklch(95% 0.018 252.5)"
+        ]
+      },
+      "sheet-error": {
+        "role": "secondary",
+        "displayName": "시트 오류",
+        "canonical": "#ff8a8a",
+        "oklch": "oklch(76.1% 0.142 20.9)",
+        "tonalRamp": [
+          "oklch(15% 0.028 20.9)",
+          "oklch(25% 0.057 20.9)",
+          "oklch(35% 0.085 20.9)",
+          "oklch(45% 0.114 20.9)",
+          "oklch(55% 0.142 20.9)",
+          "oklch(65% 0.114 20.9)",
+          "oklch(80% 0.071 20.9)",
+          "oklch(95% 0.028 20.9)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "남은 시간",
+        "purpose": "MM:SS·HH:MM 5자 카운트다운. 장 위 29% 고정."
+      },
+      "display-long": {
+        "displayName": "남은 시간 (긴 형식)",
+        "purpose": "H:MM:SS 7자일 때 한 줄에 들어가게."
+      },
+      "headline": {
+        "displayName": "빈 상태 질문",
+        "purpose": "빈 상태 제목 한 줄."
+      },
+      "title": {
+        "displayName": "캡션 제목",
+        "purpose": "이름 → 도착역."
+      },
+      "body": {
+        "displayName": "본문",
+        "purpose": "캡션 설명 문장, 빈 상태 설명."
+      },
+      "status": {
+        "displayName": "상태 줄",
+        "purpose": "숫자 아래 한 줄 상태, 출발역 버튼."
+      },
+      "label": {
+        "displayName": "라벨",
+        "purpose": "레일 버튼 이름, 태그, 시트 라벨."
+      }
+    },
+    "lineFields": {
+      "source": "lib/lineColor.ts — lineColor() 공식 노선색 → fieldColor() 흰 글자 대비 4.6:1 보정",
+      "examples": [
+        {
+          "line": "1호선",
+          "official": "#0052a4",
+          "field": "#0052a4"
+        },
+        {
+          "line": "2호선",
+          "official": "#00a84d",
+          "field": "#03833e"
+        },
+        {
+          "line": "3호선",
+          "official": "#ef7c1c",
+          "field": "#af5d19"
+        },
+        {
+          "line": "9호선",
+          "official": "#bdb092",
+          "field": "#766f5e"
+        },
+        {
+          "line": "수인분당",
+          "official": "#f5a200",
+          "field": "#976606"
+        },
+        {
+          "line": "간선버스",
+          "official": "#0068b7",
+          "field": "#0068b7"
+        },
+        {
+          "line": "심야버스(N)",
+          "official": "#28367a",
+          "field": "#28367a"
+        }
+      ]
+    },
+    "shadows": [
+      {
+        "name": "origin-text-shadow",
+        "value": "0 1px 8px rgba(0,0,0,.25)",
+        "purpose": "출발역 버튼 글자(text-shadow)만. 밝은 노선색 위 가독성 보조. box-shadow는 쓰지 않는다."
+      },
+      {
+        "name": "sheet-scrim",
+        "value": "rgba(0,0,0,.6)",
+        "purpose": "시트 뒤 배경 덮개(::backdrop)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "snap-feed",
+        "value": "scroll-snap-type: y mandatory",
+        "purpose": "사람 넘기기. 페이지 점 이동은 smooth, reduced-motion이면 즉시."
+      },
+      {
+        "name": "urgent-rise",
+        "value": "height 1000ms linear",
+        "purpose": "급함 그늘이 30→45%로 차오름."
+      },
+      {
+        "name": "dot-grow",
+        "value": "height, background-color 300ms",
+        "purpose": "지금 사람 페이지 점."
+      },
+      {
+        "name": "rail-press",
+        "value": "background-color, transform 200ms; active scale(.95)",
+        "purpose": "레일 버튼 누름."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "시트가 가운데 480px로."
+      },
+      {
+        "name": "feed-max",
+        "value": "520px",
+        "purpose": "홈 피드 최대 폭(넓은 화면에서도 휴대폰 한 장)."
+      }
+    ],
+    "unverified": [
+      "실제 iPhone에서 다음 장 peek(22px + safe-area)의 홈 인디케이터 간격",
+      "상한 항목(두 번째 타이포 목소리, 넘김 순간의 연출)은 이번 빌드에 넣지 않음"
+    ],
+    "directionDivergence": "방향 계약은 숫자를 화면 세로 40%에 두었으나 빌드는 위 29%(숫자 블록 상단). 빌드를 따른다."
+  },
+  "components": [
+    {
+      "name": "Rail Button",
+      "kind": "button",
+      "refersTo": "rail-button",
+      "description": "노선색 장 오른쪽 아래 레일의 원형 선 아이콘 버튼(수정·경로·추가).",
+      "html": "<div class=\"ds-field\"><button class=\"ds-rail\"><span class=\"ds-rail-c\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4Z\"/><path d=\"m13.5 6.5 4 4\"/></svg></span>수정</button><button class=\"ds-rail\"><span class=\"ds-rail-c\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></span>추가</button></div>",
+      "css": ".ds-field{background:#03833e;padding:20px;display:flex;gap:16px;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-rail{display:flex;flex-direction:column;align-items:center;gap:4px;width:56px;background:none;border:0;color:#fff;font-size:.75rem;font-weight:600;cursor:pointer} .ds-rail-c{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:9999px;border:1.5px solid #fff;background:rgba(0,0,0,.15);transition:background-color .2s,transform .2s} .ds-rail:hover .ds-rail-c{background:rgba(255,255,255,.15)} .ds-rail:active .ds-rail-c{transform:scale(.95)} .ds-rail:focus-visible{outline:2px solid #fff;outline-offset:3px}"
+    },
+    {
+      "name": "Rail Button (active)",
+      "kind": "button",
+      "refersTo": "rail-button-active",
+      "description": "눌린 토글(경로 펼침)이나 지금 할 일(다시 확인, 빈 상태 동작).",
+      "html": "<div class=\"ds-field\"><button class=\"ds-rail\"><span class=\"ds-rail-c ds-on\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"6\" cy=\"18\" r=\"2.2\"/><circle cx=\"18\" cy=\"6\" r=\"2.2\"/><path d=\"M8.2 18H12a2 2 0 0 0 2-2V8a2 2 0 0 1 2-2h-.2\"/></svg></span>경로</button></div>",
+      "css": ".ds-field{background:#af5d19;padding:20px;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-rail{display:flex;flex-direction:column;align-items:center;gap:4px;width:56px;background:none;border:0;color:#fff;font-size:.75rem;font-weight:600;cursor:pointer} .ds-rail-c{display:flex;width:48px;height:48px;align-items:center;justify-content:center;border-radius:9999px;border:1.5px solid #fff;transition:transform .2s} .ds-on{background:#fff;color:#0b0d10} .ds-rail:active .ds-rail-c{transform:scale(.95)} .ds-rail:focus-visible{outline:2px solid #fff;outline-offset:3px}"
+    },
+    {
+      "name": "Person Slide",
+      "kind": "custom",
+      "refersTo": "rail-button",
+      "description": "한 사람 장: 노선색 바탕, 위 29%의 고정폭 숫자와 상태 줄, 왼쪽 아래 캡션(노선 원 + 이름 → 도착역), 다음 사람 태그, 급함 그늘.",
+      "html": "<section class=\"ds-slide\"><div class=\"ds-shade\"></div><header class=\"ds-origin\">강남역에서 <span>· 2명</span> <svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></header><div class=\"ds-num-wrap\"><p class=\"ds-num\">05:56</p><p class=\"ds-status\">남았어요 · 이제 역으로</p></div><div class=\"ds-cap\"><h2><span class=\"ds-badge\" style=\"background:#03833e\">2</span>지수 → 홍대입구</h2><p>강남에서 23:31에 떠나는 2호선 성수행 막차</p><p class=\"ds-next\">다음 · 민호 46:56</p></div></section>",
+      "css": ".ds-slide{position:relative;height:560px;max-width:360px;background:#03833e;color:#fff;overflow:hidden;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif;word-break:keep-all} .ds-shade{position:absolute;left:0;right:0;bottom:0;height:38%;background:#8f1020;transition:height 1s linear} .ds-origin{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:.95rem;font-weight:600;text-shadow:0 1px 8px rgba(0,0,0,.25)} .ds-origin span{font-weight:400;color:rgba(255,255,255,.8)} .ds-num-wrap{position:absolute;left:0;right:0;top:29%;padding:0 20px;text-align:center} .ds-num{margin:0;font-family:var(--font-num), \"Barlow Condensed\", sans-serif;font-weight:600;font-size:min(36vw,9rem);line-height:.92;letter-spacing:-.01em;font-variant-numeric:tabular-nums} .ds-status{margin:12px 0 0;font-size:.95rem;font-weight:600} .ds-cap{position:absolute;left:20px;right:84px;bottom:24px} .ds-cap h2{margin:0;display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:700} .ds-badge{display:flex;height:28px;min-width:28px;padding:0 6px;box-sizing:border-box;align-items:center;justify-content:center;border:2px solid #fff;border-radius:9999px;font-size:.8rem;line-height:1} .ds-cap p{margin:6px 0 0;font-size:.92rem;line-height:1.375;color:rgba(255,255,255,.9)} .ds-cap .ds-next{width:fit-content;margin-top:12px;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.25);font-size:.78rem;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Missed Slide",
+      "kind": "custom",
+      "refersTo": "rail-button",
+      "description": "놓침: 노선색이 빠진 바탕, 떠난 시각을 흐리게 줄 그어 남긴다.",
+      "html": "<section class=\"ds-missed\"><p class=\"ds-num\">23:10</p><p class=\"ds-status\">막차가 떠났어요</p></section>",
+      "css": ".ds-missed{background:#15171b;color:#fff;padding:48px 20px;text-align:center;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-num{margin:0;font-family:var(--font-num), \"Barlow Condensed\", sans-serif;font-weight:600;font-size:min(36vw,9rem);line-height:.92;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.45);text-decoration:line-through;text-decoration-thickness:.06em} .ds-status{margin:12px 0 0;font-size:.95rem;font-weight:600}"
+    },
+    {
+      "name": "Page Dots",
+      "kind": "nav",
+      "refersTo": "rail-button",
+      "description": "오른쪽 가장자리 세로 페이지 점. 지금 사람은 긴 흰 막대.",
+      "html": "<nav class=\"ds-dots\"><button aria-current=\"true\"><span></span></button><button><span></span></button><button><span></span></button></nav>",
+      "css": ".ds-dots{display:inline-flex;flex-direction:column;background:#0068b7;padding:8px 2px} .ds-dots button{display:flex;width:24px;height:28px;align-items:center;justify-content:center;background:none;border:0;cursor:pointer} .ds-dots span{width:4px;height:12px;border-radius:9999px;background:rgba(255,255,255,.4);transition:height .3s,background-color .3s} .ds-dots [aria-current=true] span{height:24px;background:#fff} .ds-dots button:focus-visible{outline:2px solid #fff;outline-offset:3px}"
+    },
+    {
+      "name": "Sheet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "아래에서 올라오는 편집 시트(<dialog>). 중립 다크, 핸들, 제목과 닫기.",
+      "html": "<div class=\"ds-sheet\"><div class=\"ds-handle\"></div><div class=\"ds-head\"><h2>민호 수정</h2><button>닫기</button></div><label class=\"ds-label\">이름<input class=\"ds-input\" value=\"민호\"></label><button class=\"ds-primary\">저장</button><button class=\"ds-danger\">이 사람 삭제</button></div>",
+      "css": ".ds-sheet{max-width:480px;background:var(--surface,#16181d);color:var(--text,#f4f5f7);border:1px solid var(--border,#2c3038);border-bottom:0;border-radius:20px 20px 0 0;padding:12px 16px 20px;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-handle{width:40px;height:4px;margin:0 auto 12px;border-radius:9999px;background:var(--border,#2c3038)} .ds-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px} .ds-head h2{margin:0;font-size:1.1rem;font-weight:600} .ds-head button{min-height:40px;padding:0 8px;background:none;border:0;color:var(--muted,#a3a8b3);font-size:.95rem} .ds-label{display:block;margin-bottom:12px;font-size:.85rem;color:var(--muted,#a3a8b3)} .ds-input{display:block;box-sizing:border-box;width:100%;min-height:48px;margin-top:6px;padding:12px;border:1px solid var(--border,#2c3038);border-radius:10px;background:var(--bg,#0b0d10);color:var(--text,#f4f5f7);font-size:1.05rem;caret-color:#fff} .ds-input:focus{outline:2px solid var(--accent,#9ecbff);outline-offset:1px} .ds-primary{display:block;width:100%;min-height:52px;border:0;border-radius:12px;background:#fff;color:#0b0d10;font-size:1.05rem;font-weight:700;cursor:pointer} .ds-primary:focus-visible,.ds-danger:focus-visible{outline:2px solid #fff;outline-offset:3px} .ds-danger{display:block;width:100%;min-height:48px;margin-top:8px;border:0;border-radius:12px;background:none;color:var(--error,#ff8a8a);font-size:.95rem;cursor:pointer}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "시트 입력칸. 밤 바닥 바탕, 가는 선 테두리, 하늘색 포커스, 오류 시 붉은 테두리.",
+      "html": "<div class=\"ds-wrap\"><input class=\"ds-input\" placeholder=\"역 이름\"><input class=\"ds-input\" aria-invalid=\"true\" value=\"잘못된 값\"></div>",
+      "css": ".ds-wrap{background:#16181d;padding:16px;display:grid;gap:12px} .ds-input{box-sizing:border-box;width:100%;min-height:48px;padding:12px;border:1px solid var(--border,#2c3038);border-radius:10px;background:var(--bg,#0b0d10);color:var(--text,#f4f5f7);font-size:1.05rem;caret-color:#fff;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-input:focus{outline:2px solid var(--accent,#9ecbff);outline-offset:1px} .ds-input[aria-invalid=true]{border-color:var(--error,#ff8a8a)}"
+    },
+    {
+      "name": "Choice Chip",
+      "kind": "chip",
+      "refersTo": "chip-choice",
+      "description": "막차 후보 칩. 선택되면 하늘색 테두리·글자.",
+      "html": "<div class=\"ds-wrap\"><button class=\"ds-chip\" aria-pressed=\"true\">00:21 홍대입구행</button><button class=\"ds-chip\" aria-pressed=\"false\">23:58 성수행</button></div>",
+      "css": ".ds-wrap{background:#16181d;padding:16px;display:flex;flex-wrap:wrap;gap:6px;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-chip{min-height:36px;padding:0 12px;border:1px solid var(--border,#2c3038);border-radius:9999px;background:none;color:var(--text,#f4f5f7);font-size:.85rem;cursor:pointer} .ds-chip[aria-pressed=true]{border-color:var(--accent,#9ecbff);color:var(--accent,#9ecbff)} .ds-chip:focus-visible{outline:2px solid #fff;outline-offset:3px}"
+    },
+    {
+      "name": "Line Pill",
+      "kind": "chip",
+      "refersTo": "line-badge",
+      "description": "시트에서 고른 도착역 옆 노선 알약. 대비 보정된 노선색 바탕.",
+      "html": "<div class=\"ds-wrap\">도착역 (집 근처 역) <span class=\"ds-pill\" style=\"background:#af5d19\">3호선</span></div>",
+      "css": ".ds-wrap{background:#16181d;padding:16px;color:#a3a8b3;font-size:.85rem;font-family:-apple-system, BlinkMacSystemFont, \"Apple SD Gothic Neo\", Pretendard, \"Noto Sans KR\", system-ui, sans-serif} .ds-pill{margin-left:6px;padding:2px 8px;border-radius:9999px;color:#fff;font-size:.78rem;font-weight:600}"
+    }
+  ],
+  "narrative": {
+    "northStar": "오늘 밤 탈 노선의 색",
+    "overview": "홈 화면은 한 사람이 한 장을 통째로 차지하는 세로 피드다. 그 장의 바탕은 그 사람이 처음 탈 막차의 공식 노선색(2호선 초록, 3호선 주황, 간선버스 파랑)이 칠하고, 그 위에 흰 글자 하나와 좁고 키 큰 숫자 하나가 올라간다. 위로 한 번 넘기면 다음 사람의 색으로 화면이 바뀐다. 장식은 없다. 색이 곧 \"누구의, 어느 노선의\" 막차인지를 말한다.\n\n시간이 줄면 색이 상태를 겹쳐 말한다. 10분 안이면 아래에서 붉은 그늘이 차오르고, 막차가 떠나면 노선색이 빠져 거의 검정만 남는다. 편집 시트는 반대로 밤 바닥 위의 조용한 중립 다크 화면이다. 색은 홈의 몫이고, 시트는 입력에만 집중한다.\n\n확인된 시각적 거부: 그라데이션, 유리(블러) 효과, 네온, 흔한 다크 대시보드 UI. 홈은 \"가운데 큰 숫자 + 아래 칩 줄\" 타이머 대시보드 배치를 쓰지 않는다.",
+    "keyCharacteristics": [
+      "화면 전체가 노선색 한 장, 글자는 흰색 하나",
+      "남은 시간은 Barlow Condensed 600 고정폭 숫자, 화면 위 29% 지점에 고정",
+      "상태는 색으로 겹친다: 차오르는 붉은 그늘(급함), 빠진 색(놓침)",
+      "오른쪽 아래 원형 선 아이콘 레일, 왼쪽 아래 캡션",
+      "편집은 아래에서 올라오는 중립 다크 시트"
+    ],
+    "rules": [
+      {
+        "name": "The Line Paints The Field Rule",
+        "body": "홈의 한 장은 그 사람이 처음 탈 노선의 공식색으로 칠한다. 색을 새로 고르지 않는다. 노선색은 항상 `lineColor()` → `fieldColor()`를 거친다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast Floor Rule",
+        "body": "노선색 바탕은 흰 글자 대비 4.6:1 아래로 내려가지 않는다. 밝은 노선은 밤 바닥 쪽으로 섞어 대비를 맞추고, 어두운 노선은 손대지 않는다.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Ink Rule",
+        "body": "노선색 위의 글자는 흰색 하나다. 보조 글자는 회색이 아니라 흰색의 투명도(85~90%)로 덜어 쓴다. 장 안에서는 `--muted`를 `rgba(255,255,255,.85)`로 덮어써서 하위 컴포넌트도 이 규칙을 따른다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sheet Is Night Rule",
+        "body": "시트는 노선색을 쓰지 않는 중립 다크다. `sheet-accent`는 시트 안에서만 쓴다.",
+        "section": "colors"
+      },
+      {
+        "name": "The Numeral Holds Rule",
+        "body": "남은 시간은 항상 고정폭 숫자(`tabular-nums`)라서 초가 바뀌어도 자리가 흔들리지 않는다. 숫자 블록은 장의 위 29% 지점에 고정한다.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Display Voice Rule",
+        "body": "Barlow Condensed는 숫자(남은 시간, 빈 상태의 `--:--`)에만 쓴다. 한국어 문장에는 쓰지 않는다.",
+        "section": "typography"
+      },
+      {
+        "name": "The Fixed Seat Rule",
+        "body": "상태가 바뀌어도(급함, 놓침, 다시 확인, 빈 상태) 숫자·캡션·레일의 자리는 그대로다. 빈 상태도 숫자 자리에 흐린 `--:--`를 두고 할 일은 레일 버튼 하나로 둔다.",
+        "section": "layout"
+      },
+      {
+        "name": "The Layered Not Lifted Rule",
+        "body": "요소는 떠오르지 않고 겹친다. 반투명 검정·흰 테두리로 구분하고, box-shadow로 띄우지 않는다.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** 홈의 장 바탕은 언제나 `fieldColor(lineColor(첫 구간))`로 칠한다. 노선을 모르면 `field-neutral`.",
+      "**Do** 노선색 위 보조 글자는 흰색 투명도(80~90%)로 쓴다.",
+      "**Do** 남은 시간은 Barlow Condensed 600 고정폭 숫자로, 장 위 29% 자리에 둔다.",
+      "**Do** 상태는 색을 겹쳐 말한다: 급함은 아래에서 차오르는 `urgent-shade` 단색 판, 놓침은 `field-missed`와 줄 그은 흐린 숫자.",
+      "**Do** 새 아이콘은 선 굵기 1.75, 둥근 끝, 24 그리드 SVG로 직접 그린다.",
+      "**Do** 움직임은 `prefers-reduced-motion`이면 즉시 이동으로 바꾼다."
+    ],
+    "donts": [
+      "**Don't** 그라데이션, 유리(블러) 효과, 네온 발광을 쓰지 않는다.",
+      "**Don't** 노선색 위에 회색 글자나 흰색 아닌 강조색을 쓰지 않는다.",
+      "**Don't** 공식 노선색을 대비 보정 없이 넓은 바탕에 깔지 않는다(4.6:1 미만).",
+      "**Don't** box-shadow로 요소를 띄우지 않는다.",
+      "**Don't** `sheet-accent` 하늘색을 홈의 노선색 장 위에 쓰지 않는다."
+    ]
+  }
+}

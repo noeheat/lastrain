@@ -1,37 +1,28 @@
 @import "tailwindcss";
 
+/* 밤 바닥 위 흰 글자 하나. 홈 화면 색은 사람마다 노선색(lib/lineColor.ts)이 칠한다 */
 :root {
-  --bg: #0f1420;
-  --surface: #1a2131;
-  --text: #eef1f7;
-  --muted: #8e98ad;
-  --border: #2b3448;
-  --accent: #5fb3ff;
-  --error: #ff6b6b;
+  --bg: #0b0d10;
+  --surface: #16181d;
+  --text: #f4f5f7;
+  --muted: #a3a8b3;
+  --border: #2c3038;
+  --accent: #9ecbff; /* 시트의 링크·선택 표시 (본문 흰색과 구분) */
+  --error: #ff8a8a;
+  --state: #ffffff;
   color-scheme: dark;
 }
-
-/* 카운트다운 단계별 색 (body[data-level]은 클라이언트에서 설정) */
-body[data-level="calm"]   { --state: #5fd3a0; --state-bg: #0f1a1a; }
-body[data-level="warn"]   { --state: #ffc24b; --state-bg: #1f1a0e; }
-body[data-level="urgent"] { --state: #ff5d5d; --state-bg: #261012; }
-body[data-level="missed"] { --state: #8e98ad; --state-bg: #14171f; }
-
-/* 사람 칩의 점·테두리 색 (사람마다 따로라 data-lv로 고른다) */
-[data-lv="calm"]   { --lv: #5fd3a0; }
-[data-lv="warn"]   { --lv: #ffc24b; }
-[data-lv="urgent"] { --lv: #ff5d5d; }
-[data-lv="missed"] { --lv: #8e98ad; }
 
 body {
   background: var(--bg);
   color: var(--text);
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  word-break: keep-all; /* 한국어를 낱말 중간에서 줄바꿈하지 않는다 */
 }
 
-body.counting {
-  background: var(--state-bg);
-  transition: background-color 0.6s ease;
-}
+::selection { background: #ffffff; color: #0b0d10; }
+:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+input { caret-color: #ffffff; }
 

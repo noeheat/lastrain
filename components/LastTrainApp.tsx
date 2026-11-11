@@ -63,7 +63,7 @@ export function LastTrainApp() {
   const editing = open?.kind === 'person' ? open.index : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[480px] px-4 pt-[max(24px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
+    <main>
       <Countdown
         origin={origin}
         people={people}
@@ -135,7 +135,7 @@ function OriginForm({ initial, onSave }: { initial: Origin; onSave: (o: Origin) 
         onPick={(s, results) => pick(s, results)}
       />
       <p role="alert" className="mb-3 min-h-[1.2em] text-[0.9rem] text-[var(--error)]">{error}</p>
-      <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-[var(--accent)] text-[1.05rem] font-semibold text-[#06121f]">
+      <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-white text-[1.05rem] font-bold text-[#0b0d10]">
         저장
       </button>
     </form>

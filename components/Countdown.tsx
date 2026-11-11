@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { computePlan, formatClock, formatRemaining, levelFor, trainTime, type Level, type Person, type PlanRow } from '@/lib/time';
 import { isStale, type Origin } from '@/lib/origin';
 import { MAX_PEOPLE } from '@/lib/schema';
 import { legName, lineLabel } from '@/lib/transfer';
+import { fieldColor, lineBadge, lineColor } from '@/lib/lineColor';
 import { BusLive } from './BusLive';
+import { ChevronDownIcon, PencilIcon, PlusIcon, RouteIcon } from './Icons';
 
 type Props = {
   origin: Origin;
@@ -22,13 +24,31 @@ type Item = { person: Person; row: PlanRow | null; level: Level };
 const levelOf = (row: PlanRow | null): Level =>
   !row ? 'missed' : row.missed ? 'missed' : levelFor(row.msToTrain);
 
+// 다음 사람 화면이 아래에 보이는 높이. 홈 인디케이터(safe-area) 위로 올리고, 위 모서리를 둥글게 해서 '다음 장'으로 읽히게
+const PEEK = '(22px + env(safe-area-inset-bottom))';
+const MISSED_FIELD = '#15171b';
+
+/** 저장한 막차 경로 (직접 입력한 시각이거나 예전 저장값이면 없음) */
+const routeOf = (p: Person) => (p.route?.[0]?.dep === p.train ? p.route : undefined);
+
+/** 처음 탈 노선 (경로가 없으면 도착역 노선) */
+const firstLeg = (p: Person) => routeOf(p)?.[0] ?? (p.dest ? { line: p.dest.line } : undefined);
+
+/** 그 사람 화면의 바탕색: 처음 탈 노선의 색. 막차를 놓치면 노선색이 빠진다 (다시 확인은 색을 유지) */
+function fieldOf(it: Item): string {
+  if (it.row?.missed) return MISSED_FIELD;
+  return fieldColor(lineColor(firstLeg(it.person)));
+}
+
 /**
- * 홈 화면: 출발역, 한 사람씩 넘겨 보는 큰 카운트다운, 사람 칩(각자 남은 시간·색), 사람 추가.
- * 직접 넘기기 전에는 가장 급한 사람을 보여주고, 그 사람이 바뀌면(막차를 놓침 등) 따라간다.
+ * 홈 화면: 한 사람이 화면 전체를 차지하는 세로 피드. 위로 넘기면 다음 사람.
+ * 처음엔 가장 급한 사람에서 시작한다. 사람 순서는 바꾸지 않는다(넘기는 중에 자리가 움직이지 않게).
  */
 export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerson, onAdd }: Props) {
   const [now, setNow] = useState(() => new Date(Date.now() + nowOffset));
-  const [picked, setPicked] = useState<number | null>(null); // 직접 고른 사람 (null이면 가장 급한 사람)
+  const [current, setCurrent] = useState(0);
+  const scroller = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
 
   // 초 경계에 맞춰 갱신하고, 탭이 숨겨지면 멈췄다가 돌아오면 즉시 다시 계산
   useEffect(() => {
@@ -58,103 +78,132 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
     const row = k >= 0 ? rows[k]! : null;
     return { person, row, level: levelOf(row) };
   });
-
   const leadIdx = lead >= 0 ? activeIdx[lead]! : 0;
-  const current = picked != null && picked < people.length ? picked : leadIdx;
-  const item = items[current];
-  const level: Level = item ? item.level : 'calm';
 
+  // 처음 열 때 가장 급한 사람 화면으로 (한 번만. 그 뒤로는 사용자가 넘긴 자리를 지킨다)
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (started.current || !el || people.length === 0) return;
+    started.current = true;
+    const slide = el.children[leadIdx] as HTMLElement | undefined;
+    if (slide) el.scrollTop = slide.offsetTop;
+    setCurrent(leadIdx);
+  }, [leadIdx, people.length]);
+
+  const onScroll = () => {
+    const el = scroller.current;
+    const first = el?.children[0] as HTMLElement | undefined;
+    if (!el || !first) return;
+    const i = Math.min(people.length - 1, Math.round(el.scrollTop / first.offsetHeight));
+    if (i !== current) setCurrent(i);
+  };
+  const jump = (i: number) => {
+    const slide = scroller.current?.children[i] as HTMLElement | undefined;
+    slide?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  };
+
+  // 상태 표시줄(iOS·안드로이드) 색도 보고 있는 사람 화면색에 맞춘다
+  const shown = items[Math.min(current, items.length - 1)];
+  const top = shown ? fieldOf(shown) : '#0b0d10';
   useEffect(() => {
-    document.body.classList.toggle('counting', !!item);
-    document.body.dataset.level = level;
-  }, [item, level]);
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', top);
+  }, [top]);
 
-  const go = (step: number) => setPicked((current + step + people.length) % people.length);
+  const originLabel = origin.text ? (origin.text.endsWith('역') ? origin.text : `${origin.text}역`) : '';
 
   return (
-    <section className="flex flex-col items-center text-center">
-      {origin.text && (
-        <button
-          type="button"
-          onClick={onEditOrigin}
-          className="mb-2 min-h-11 rounded-full border px-4 text-[0.95rem] border-[var(--border)] text-[var(--text)]"
-        >
-          {origin.text}에서 출발 <span className="text-[var(--muted)]">· 바꾸기</span>
-        </button>
-      )}
-
+    // 넓은 화면에서도 휴대폰 폭 한 장으로 (피드는 가운데 세로 한 줄)
+    <div className="fixed inset-0 bg-[#0b0d10] text-white">
+    <div className="relative mx-auto h-full max-w-[520px] overflow-hidden">
       {!origin.text ? (
-        <Empty title="어디서 출발하나요?" body="함께 있는 곳에서 가까운 역을 고르면, 각자 막차에 맞춰 언제 일어나야 하는지 알려줘요.">
-          <button type="button" onClick={onEditOrigin} className="mt-6 block min-h-[52px] w-full rounded-xl bg-[var(--accent)] text-[1.05rem] font-semibold text-[#06121f]">
-            출발역 고르기
-          </button>
-        </Empty>
-      ) : !item ? (
-        <Empty title="누구의 막차를 볼까요?" body="사람마다 집 근처 역을 넣으면 막차를 자동으로 찾아요." />
-      ) : (
-        <Focus
-          key={current} // 사람을 넘기면 실시간 상태를 새로 시작
-          item={item}
-          now={now}
-          count={people.length}
-          index={current}
-          onStep={go}
-          onEdit={() => onEditPerson(current)}
+        <Empty
+          title="어디서 헤어지나요?"
+          body="지금 같이 있는 곳에서 가까운 역을 고르면, 각자 막차까지 남은 시간을 세어 드려요."
+          action="출발역"
+          onAction={onEditOrigin}
         />
+      ) : people.length === 0 ? (
+        <Empty
+          title="누구 막차부터 볼까요?"
+          body="사람마다 집 근처 역을 넣으면 막차를 알아서 찾아요. 여섯 명까지 돼요."
+          action="추가"
+          onAction={onAdd}
+        />
+      ) : (
+        <div
+          ref={scroller}
+          onScroll={onScroll}
+          className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {items.map((it, i) => (
+            <Slide
+              key={i}
+              item={it}
+              now={now}
+              field={fieldOf(it)}
+              first={i === 0}
+              last={i === items.length - 1}
+              next={items[i + 1]}
+              canAdd={people.length < MAX_PEOPLE}
+              onEdit={() => onEditPerson(i)}
+              onAdd={onAdd}
+            />
+          ))}
+        </div>
       )}
 
       {origin.text && (
-        <div className="mt-2 flex w-full flex-wrap justify-center gap-2">
-          {people.length > 1 && items.map((it, i) => (
+        <header className="pointer-events-none absolute inset-x-0 top-0 flex justify-center pt-[max(14px,env(safe-area-inset-top))]">
+          <button
+            type="button"
+            onClick={onEditOrigin}
+            className="pointer-events-auto flex min-h-11 items-center gap-1.5 px-3 text-[0.95rem] font-semibold [text-shadow:0_1px_8px_rgba(0,0,0,.25)]"
+          >
+            {originLabel}에서{people.length > 0 && <span className="font-normal text-white/80">· {people.length}명</span>}
+            <ChevronDownIcon className="text-white/80" />
+          </button>
+        </header>
+      )}
+
+      {people.length > 1 && (
+        <nav aria-label="사람 넘기기" className="absolute top-1/2 right-0.5 flex -translate-y-1/2 flex-col">
+          {items.map((it, i) => (
             <button
               key={i}
               type="button"
-              data-lv={it.level}
-              aria-pressed={i === current}
-              onClick={() => setPicked(i)}
-              className={`flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-[0.95rem] tabular-nums ${
-                i === current
-                  ? 'border-[var(--lv)] text-[var(--text)]'
-                  : 'border-white/10 text-[var(--muted)]'
-              }`}
+              aria-label={`${it.person.name} 보기`}
+              aria-current={i === current}
+              onClick={() => jump(i)}
+              className="flex h-7 w-6 items-center justify-center"
             >
-              <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--lv)]" />
-              {it.person.name} <span className="font-semibold">{shortStatus(it)}</span>
+              <span className={`w-1 rounded-full transition-[height,background-color] duration-300 ${i === current ? 'h-6 bg-white' : 'h-3 bg-white/40'}`} />
             </button>
           ))}
-          {people.length < MAX_PEOPLE && (
-            <button
-              type="button"
-              onClick={onAdd}
-              className={`min-h-11 rounded-full border border-dashed border-[var(--border)] px-3.5 text-[0.95rem] text-[var(--muted)] ${
-                people.length === 0 ? 'w-full min-h-[52px] rounded-xl text-[1.05rem] font-semibold' : ''
-              }`}
-            >
-              + 사람 추가
-            </button>
-          )}
-        </div>
+        </nav>
       )}
-    </section>
+    </div>
+    </div>
   );
 }
 
-/** 칩에 들어가는 짧은 상태 */
-function shortStatus({ row }: Item): string {
-  if (!row) return '확인';
-  if (row.missed) return '놓침';
-  return formatRemaining(row.msToTrain);
-}
+type SlideProps = {
+  item: Item;
+  now: Date;
+  field: string;
+  first: boolean;
+  last: boolean;
+  next: Item | undefined;
+  canAdd: boolean;
+  onEdit: () => void;
+  onAdd: () => void;
+};
 
-type FocusProps = { item: Item; now: Date; count: number; index: number; onStep: (step: number) => void; onEdit: () => void };
-
-/** 한 사람의 큰 카운트다운. 좌우로 밀거나 ‹ › 로 다음 사람 */
-function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
-  const { person, row } = item;
-  const startX = useRef<number | null>(null);
+/** 한 사람 화면: 가운데 큰 남은 시간, 왼쪽 아래 캡션, 오른쪽 버튼 레일 */
+function Slide({ item, now, field, first, last, next, canAdd, onEdit, onAdd }: SlideProps) {
+  const { person, row, level } = item;
+  const [routeOpen, setRouteOpen] = useState(false);
   const dest = person.dest?.name ?? '';
-  // 저장한 막차 경로 (직접 입력한 시각이거나 예전 저장값이면 없음)
-  const route = person.route?.[0]?.dep === person.train ? person.route : undefined;
+  const route = routeOf(person);
   const one = route?.length === 1 ? route[0]! : null;
   // 첫 구간이 버스면 실시간 막차 도착을 받아, 예정보다 일찍 오면 카운트다운을 앞당긴다 (늦어지면 안내만)
   const firstBus = route?.[0]?.kind === 'bus' && route[0].arsId && route[0].routeId ? route[0] : null;
@@ -170,20 +219,23 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
   const livePassed = !!row && !row.missed && (liveEnded || (!!earlier && earlier.getTime() < now.getTime() - 60_000));
 
   let clock: string;
+  let status: string;
   let sub: string;
   if (!row) {
-    clock = '--:--';
-    sub = '출발역이 바뀌었어요. 막차를 다시 확인해 주세요';
+    clock = '--:--'; // 예전 출발역 기준 막차는 맞지 않는다. 남은 시간으로 읽히지 않게 숫자를 비운다
+    status = '출발역이 바뀌었어요';
+    sub = '다시 확인을 누르면 새 출발역 기준으로 막차를 찾아요';
   } else if (row.missed) {
-    clock = '놓침';
-    sub = `막차 ${formatClock(row.trainAt)}가 지났어요 · 택시나 심야버스를 찾아보세요`;
+    clock = formatClock(row.trainAt);
+    status = '막차가 떠났어요';
+    sub = '택시나 심야버스를 찾아볼 시간이에요';
   } else if (livePassed) {
-    clock = '놓침';
-    sub = earlier
-      ? `실시간으로 막차가 ${formatClock(earlier)}에 지나갔어요 (예정 ${formatClock(row.trainAt)}보다 일찍) · 택시나 심야버스를 찾아보세요`
-      : '실시간으로 보니 오늘 운행이 끝났어요 · 택시나 심야버스를 찾아보세요';
+    clock = formatClock(earlier ?? row.trainAt);
+    status = earlier ? '실시간 막차가 지나갔어요' : '실시간으로 보니 오늘 운행이 끝났어요';
+    sub = earlier ? `예정 ${formatClock(row.trainAt)}보다 일찍 왔어요 · 택시나 심야버스를 찾아보세요` : '택시나 심야버스를 찾아보세요';
   } else {
     clock = formatRemaining(earlier ? earlier.getTime() - now.getTime() : row.msToTrain);
+    status = level === 'urgent' ? '남았어요 · 이제 역으로' : level === 'warn' ? '남았어요 · 슬슬 일어날 시간' : '남았어요';
     if (one?.kind === 'bus') {
       // 버스는 역이 아니라 정류장에서 탄다. 정류장별 막차는 시간표상 예정 시각
       sub = `${one.from}에서 ${formatClock(row.trainAt)}에 떠나는 ${one.line}번 버스 막차${one.estimated ? ' (추정)' : ''}`;
@@ -194,80 +246,159 @@ function Focus({ item, now, count, index, onStep, onEdit }: FocusProps) {
       sub = `${where}에서 ${formatClock(row.trainAt)}에 떠나는 ${what}`;
     }
   }
-  const isText = !row || row.missed || livePassed;
-  const arrow = 'min-h-11 min-w-11 text-[1.6rem] leading-none text-[var(--muted)]';
+  const running = !!row && !row.missed && !livePassed;
+  const gone = !!row && !running; // 막차가 떠남: 떠난 시각을 줄을 그어 남긴다
+  const multi = !!route && route.length > 1;
+  // 숫자 길이에 맞춰 한 줄에 들어가게 (MM:SS·HH:MM은 5자, H:MM:SS는 7자)
+  const size = clock.length > 5 ? 'text-[min(28vw,7.5rem)]' : 'text-[min(36vw,9rem)]';
+  // 10분 안이면 아래에서 붉은 그늘이 차오른다. 남은 시간이 줄수록 높아지되(30→45%), 숫자·상태 줄에는 닿지 않는다
+  const msLeft = running && row ? (earlier ? earlier.getTime() - now.getTime() : row.msToTrain) : 0;
+  const rise = running && level === 'urgent' ? 30 + 15 * (1 - Math.max(0, Math.min(1, msLeft / 600_000))) : 0;
+  const leg = firstLeg(person);
+  // 노선 원도 바탕과 같은 규칙: 흰 글자 대비가 나올 때까지만 어둡게 (9호선 베이지·수인분당 노랑)
+  const badgeColor = fieldColor(lineColor(leg));
+  const bottom = last ? 'calc(max(20px, env(safe-area-inset-bottom)) + 28px)' : '24px';
 
   return (
-    <div
-      className="w-full touch-pan-y pt-[4vh] pb-4 select-none"
-      onPointerDown={(e) => { startX.current = e.clientX; }}
-      onPointerUp={(e) => {
-        const dx = startX.current == null ? 0 : e.clientX - startX.current;
-        startX.current = null;
-        if (count > 1 && Math.abs(dx) > 50) onStep(dx < 0 ? 1 : -1);
+    <section
+      aria-label={`${person.name}${dest ? ` → ${dest}` : ''}`}
+      data-lv={level}
+      className={`relative snap-start overflow-hidden ${first ? '' : 'rounded-t-[22px]'}`}
+      style={{
+        height: last ? '100dvh' : `calc(100dvh - ${PEEK})`,
+        backgroundColor: field,
+        // 색 바탕 위 보조 글자는 회색이 아니라 흰색을 덜어 쓴다 (BusLive 등 하위 컴포넌트도 이 값을 쓴다)
+        ['--muted' as string]: 'rgba(255,255,255,.85)',
+        ['--state' as string]: '#ffffff',
+        ['--error' as string]: '#ffe1e1',
       }}
     >
-      <div className="flex items-center justify-between">
-        {count > 1 ? <button type="button" aria-label="이전 사람" onClick={() => onStep(-1)} className={arrow}>‹</button> : <span />}
-        <p className="m-0 text-[1.1rem] text-[var(--state)]">
-          {person.name}{dest && <span className="text-[var(--muted)]"> → {dest}</span>}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 bottom-0 bg-[#8f1020] transition-[height] duration-1000 ease-linear"
+        style={{ height: `${rise}%` }}
+      />
+
+      <div className="absolute inset-x-0 top-[29%] px-5 text-center">
+        <p
+          className={`m-0 font-[family-name:var(--font-num)] leading-[0.92] font-semibold tracking-[-0.01em] tabular-nums ${size} ${
+            running ? '' : 'text-white/45'
+          } ${gone ? 'line-through decoration-[0.06em]' : ''}`}
+          aria-live="off"
+        >
+          {clock}
         </p>
-        {count > 1 ? <button type="button" aria-label="다음 사람" onClick={() => onStep(1)} className={arrow}>›</button> : <span />}
+        <p className="mt-3 text-[0.95rem] font-semibold">{status}</p>
+        {earlier && running && (
+          <p className="mx-auto mt-3 w-fit rounded-full border border-white/80 px-3 py-1 text-[0.8rem] font-semibold">
+            실시간 막차가 일찍 와서 앞당겼어요
+          </p>
+        )}
       </div>
-      <p
-        aria-live="off"
-        className={`clock my-2 leading-none font-bold tracking-[-0.02em] tabular-nums text-[var(--state)] transition-colors duration-500 ${
-          isText ? 'text-[clamp(3rem,16vw,6rem)]' : 'text-[clamp(4rem,24vw,9rem)]'
-        }`}
-      >
-        {clock}
-      </p>
-      <p className="m-0 text-[0.95rem] text-[var(--muted)]">{sub}</p>
-      {earlier && !livePassed && <p className="m-0 mt-1 text-[0.85rem] font-semibold text-[var(--state)]">실시간 막차가 예정보다 일찍 와서 카운트다운을 앞당겼어요</p>}
-      {row && !row.missed && one && firstBus && (
-        <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLive={onFirstLive} />
-      )}
-      {row && !row.missed && route && route.length > 1 && (
-        <ol className="mx-auto mt-3 max-w-[340px] space-y-1 text-left text-[0.85rem]">
-          {route.map((l, i) => (
-            <li key={i} className="rounded-lg border border-white/10 px-3 py-2">
-              <span className="font-semibold">{legName(l)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
-              {l.estimated ? ' (추정)' : ''}{l.endName && <span className="text-[var(--muted)]"> · {l.endName}행</span>}
-              {l.kind === 'bus' && l.arsId && l.routeId && (() => {
-                const due = trainTime(l.dep, now);
-                return due && (
-                  <BusLive arsId={l.arsId} routeId={l.routeId} line={l.line} due={due} now={now}
-                    onLive={i === 0 ? onFirstLive : undefined} />
-                );
-              })()}
-            </li>
-          ))}
-        </ol>
-      )}
-      {count > 1 && (
-        <div aria-hidden className="mt-3 flex justify-center gap-1.5">
-          {Array.from({ length: count }, (_, i) => (
-            <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === index ? 'bg-[var(--state)]' : 'bg-white/25'}`} />
-          ))}
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={onEdit}
-        className={`mt-3 min-h-11 px-3 text-[0.95rem] underline ${!row ? 'font-semibold text-[var(--accent)]' : 'text-[var(--muted)]'}`}
-      >
-        {!row ? '막차 다시 확인' : `${person.name} 수정`}
-      </button>
-    </div>
+
+      <div className="absolute left-5 right-[84px]" style={{ bottom }}>
+        <h2 className="m-0 flex items-center gap-2.5 text-[1.15rem] font-bold">
+          {leg && (
+            <span
+              aria-label={legName(leg)}
+              className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full border-2 border-white px-1.5 text-[0.8rem] leading-none font-bold"
+              style={{ backgroundColor: badgeColor ?? 'transparent' }}
+            >
+              {lineBadge(leg)}
+            </span>
+          )}
+          <span>{person.name}{dest && <span className="font-semibold"> → {dest}</span>}</span>
+        </h2>
+        <p className="mt-1.5 text-[0.92rem] leading-snug text-white/90">{sub}</p>
+        {running && multi && !routeOpen && (
+          <p className="mt-1 text-[0.85rem] text-white/85">{route.map((l) => legName(l)).join(' → ')}</p>
+        )}
+        {running && one && firstBus && (
+          <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLive={onFirstLive} />
+        )}
+        {running && multi && routeOpen && (
+          <ol className="mt-2.5 space-y-1.5 text-[0.85rem]">
+            {route.map((l, i) => (
+              <li key={i} className="flex gap-2.5">
+                <span aria-hidden className="mt-1 h-3 w-3 shrink-0 rounded-full border-2 border-white" style={{ backgroundColor: lineColor(l) ?? 'transparent' }} />
+                <span>
+                  <span className="font-semibold">{legName(l)}</span> {l.from} {l.dep} → {l.to}{l.arr ? ` ${l.arr}` : ''}
+                  {l.estimated ? ' (추정)' : ''}{l.endName && <span className="text-white/85"> · {l.endName}행</span>}
+                  {l.kind === 'bus' && l.arsId && l.routeId && (() => {
+                    const due = trainTime(l.dep, now);
+                    return due && (
+                      <BusLive arsId={l.arsId} routeId={l.routeId} line={l.line} due={due} now={now}
+                        onLive={i === 0 ? onFirstLive : undefined} />
+                    );
+                  })()}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {next && (
+          <p className="mt-3 w-fit rounded-md bg-black/25 px-2 py-1 text-[0.78rem] font-semibold tabular-nums">
+            다음 · {next.person.name} {shortStatus(next)}
+          </p>
+        )}
+      </div>
+
+      <div className="absolute right-3 flex flex-col items-center gap-4" style={{ bottom }}>
+        <RailButton label={row ? '수정' : '다시 확인'} strong={!row} onClick={onEdit}><PencilIcon /></RailButton>
+        {running && multi && (
+          <RailButton label="경로" pressed={routeOpen} onClick={() => setRouteOpen((v) => !v)}><RouteIcon /></RailButton>
+        )}
+        {canAdd && <RailButton label="추가" onClick={onAdd}><PlusIcon /></RailButton>}
+      </div>
+    </section>
   );
 }
 
-function Empty({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
+/** 다음 사람 태그·점 버튼에 들어가는 짧은 상태 */
+function shortStatus({ row }: Item): string {
+  if (!row) return '확인 필요';
+  if (row.missed) return '놓침';
+  return formatRemaining(row.msToTrain);
+}
+
+type RailProps = { label: string; onClick: () => void; pressed?: boolean; strong?: boolean; children: React.ReactNode };
+
+function RailButton({ label, onClick, pressed, strong, children }: RailProps) {
   return (
-    <div className="my-10 w-full px-2">
-      <p className="m-0 text-[1.3rem] font-bold">{title}</p>
-      <p className="mt-2 text-[0.95rem] text-[var(--muted)]">{body}</p>
-      {children}
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={pressed}
+      className="group flex w-14 flex-col items-center gap-1 text-[0.75rem] font-semibold"
+    >
+      <span
+        className={`flex h-12 w-12 items-center justify-center rounded-full border-[1.5px] border-white transition-[background-color,color,transform] duration-200 group-active:scale-95 ${
+          pressed || strong ? 'bg-white text-[#0b0d10]' : 'bg-black/15 group-hover:bg-white/15'
+        }`}
+      >
+        {children}
+      </span>
+      {label}
+    </button>
+  );
+}
+
+/** 빈 상태도 피드 한 장: 숫자 자리는 비워 두고, 할 일은 오른쪽 레일 버튼 하나 */
+function Empty({ title, body, action, onAction }: { title: string; body: string; action: string; onAction: () => void }) {
+  const bottom = 'calc(max(20px, env(safe-area-inset-bottom)) + 28px)';
+  return (
+    <section className="relative h-dvh bg-[#1b1e24]">
+      <p className="absolute inset-x-0 top-0 m-0 pt-[max(24px,env(safe-area-inset-top))] text-center text-[0.95rem] font-semibold text-white/85">막차 카운트다운</p>
+      <div aria-hidden className="absolute inset-x-0 top-[29%] text-center font-[family-name:var(--font-num)] text-[min(36vw,9rem)] leading-[0.92] font-semibold text-white/15 tabular-nums">
+        --:--
+      </div>
+      <div className="absolute left-5 right-[84px]" style={{ bottom }}>
+        <h1 className="m-0 text-[1.45rem] leading-tight font-bold">{title}</h1>
+        <p className="mt-2 text-[0.95rem] leading-relaxed text-white/85">{body}</p>
+      </div>
+      <div className="absolute right-3" style={{ bottom }}>
+        <RailButton label={action} strong onClick={onAction}><PlusIcon /></RailButton>
+      </div>
+    </section>
   );
 }

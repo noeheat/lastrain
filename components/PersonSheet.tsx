@@ -118,7 +118,7 @@ export function PersonSheet({ origin, person, onSave, onDelete }: Props) {
         <BusChoices origin={origin.options[0]!} dest={d.dest} train={d.train} route={d.route} onChoose={(t, r) => onTrain(t, r)} onLoaded={onBusLoaded} />
       )}
       <p role="alert" className="mb-3 min-h-[1.2em] text-[0.9rem] text-[var(--error)]">{error}</p>
-      <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-[var(--accent)] text-[1.05rem] font-semibold text-[#06121f]">
+      <button type="submit" className="block min-h-[52px] w-full rounded-xl bg-white text-[1.05rem] font-bold text-[#0b0d10]">
         저장
       </button>
       {onDelete && (

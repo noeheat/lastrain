@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { StationRef } from '@/lib/time';
 import { hintClass, inputClass, labelClass } from './formStyles';
+import { fieldColor, lineColor } from '@/lib/lineColor';
 
 type Props = {
   label: string;
@@ -56,7 +57,12 @@ export function StationPicker({ label, text, picked, invalid, onText, onPick, ba
     <div className={labelClass}>
       <label>
         {label}
-        {picked && <span className="ml-1.5 text-[var(--accent)]">{badge ?? picked.line}</span>}
+        {/* 고른 노선은 그 노선색 바탕에 흰 글자 (노선색이 곧 노선 표시) */}
+        {picked && (
+          <span className="ml-1.5 rounded-full px-2 py-0.5 text-[0.78rem] font-semibold text-white" style={{ backgroundColor: fieldColor(lineColor(picked)) }}>
+            {badge ?? picked.line}
+          </span>
+        )}
         <input
           value={text}
           onChange={(e) => onText(e.target.value)}
