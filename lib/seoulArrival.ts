@@ -27,7 +27,19 @@ export type Arrival = {
 /** 1~9호선 subwayId (1001~1009) → "N호선". 그 외(신분당 등)는 이 앱에서 열차 번호를 이을 수 없어 버린다 */
 export const lineOfSubwayId = (id: string | undefined) => (id && /^100[1-9]$/.test(id) ? `${id.slice(-1)}호선` : null);
 
-const sameNo = (a: string, b: string) => a.replace(/^0+/, '') === b.replace(/^0+/, '');
+const strip = (s: string) => s.replace(/^0+/, '');
+
+/**
+ * 같은 열차 번호인가. 2호선은 실시간 번호 첫 자리가 2 대신 3일 때가 있다(시간표 2244 = 실시간 3244,
+ * 내선·외선 모두, 시각도 같음. spike/seoul-trainno.js). 2호선 시간표는 한 방향 안에서 뒤 3자리가 겹치지 않아
+ * 뒤 3자리로 잇는다. 1·3호선은 뒤 3자리가 겹치는 번호(K602/K1602)가 있어 그대로 비교한다
+ */
+const sameNo = (line: string, a: string, b: string) => {
+  const x = strip(a);
+  const y = strip(b);
+  if (x === y) return true;
+  return line === '2호선' && /^[23]\d{3}$/.test(x) && /^[23]\d{3}$/.test(y) && x.slice(1) === y.slice(1);
+};
 
 /** "2026-11-12 13:36:32"(서울 시각) → ms */
 export function parseRecptn(s: string | undefined): number | null {
@@ -63,5 +75,5 @@ export function parseArrivals(rows: ArrivalRow[], now: number): Arrival[] {
 
 /** 저장한 막차(노선·열차 번호)에 해당하는 실시간 열차. 다음 두 대 안에 없으면 null */
 export function findTrain(arrivals: Arrival[], line: string, trainNo: string): Arrival | null {
-  return arrivals.find((a) => a.line === line && sameNo(a.trainNo, trainNo)) ?? null;
+  return arrivals.find((a) => a.line === line && sameNo(line, a.trainNo, trainNo)) ?? null;
 }

@@ -45,3 +45,13 @@ test('findTrain: 노선과 열차 번호(앞 0 무시)가 같은 열차', () => 
   assert.equal(findTrain(a, '3호선', '2241'), null);
   assert.equal(findTrain(a, '2호선', '9999'), null);
 });
+
+test('findTrain: 2호선은 실시간 첫 자리 3과 시간표 첫 자리 2를 같은 열차로 본다', () => {
+  const a = parseArrivals([
+    { subwayId: '1002', btrainNo: '3244', barvlDt: '150', arvlCd: '99', recptnDt: '2026-11-12 13:51:02' },
+    { subwayId: '1001', btrainNo: 'K1602', barvlDt: '150', arvlCd: '99', recptnDt: '2026-11-12 13:51:02' },
+  ], now);
+  assert.equal(findTrain(a, '2호선', '2244')?.trainNo, '3244');
+  assert.equal(findTrain(a, '2호선', '2245'), null);
+  assert.equal(findTrain(a, '1호선', 'K602'), null); // 1호선은 뒤 3자리가 겹치는 다른 열차가 있다
+});
