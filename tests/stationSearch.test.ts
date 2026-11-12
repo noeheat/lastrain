@@ -1,10 +1,19 @@
 import { test } from 'vitest';
 import assert from 'node:assert/strict';
-import { fulfilledLists, rankStations, searchTerms } from '../lib/stationSearch';
+import { rankStations, searchTerms, tagoKeyword } from '../lib/stationSearch';
 
 const st = (id: string, name: string, line = '2호선') => ({ id, name, line });
 
-test("searchTerms: '역'으로 끝나면 뗀 검색어도 함께", () => {
+test("tagoKeyword: '역'을 뗀 검색어 하나 (TAGO는 포함 검색이라 '서울'이 '서울역'을 포함)", () => {
+  assert.equal(tagoKeyword('강남역'), '강남');
+  assert.equal(tagoKeyword(' 서울역 '), '서울');
+  assert.equal(tagoKeyword('강남 역'), '강남');
+  assert.equal(tagoKeyword('강남'), '강남');
+  assert.equal(tagoKeyword('역'), '역'); // 떼면 빈 문자열이라 그대로
+  assert.equal(tagoKeyword(' 역'), '역');
+});
+
+test("searchTerms: 순위용 이름은 원래 검색어와 뗀 검색어 둘 다", () => {
   assert.deepEqual(searchTerms('강남역'), ['강남역', '강남']);
   assert.deepEqual(searchTerms(' 서울역 '), ['서울역', '서울']);
   assert.deepEqual(searchTerms('강남'), ['강남']);
@@ -31,14 +40,4 @@ test("rankStations: '역'까지가 이름인 역(서울역)이 위로, 괄호 �
 test('rankStations: 괄호 안 이름으로 검색해도 0순위 ("이수" → 총신대입구(이수))', () => {
   const r = rankStations([[st('S1', '이수역사거리', '버스'), st('S4', '총신대입구(이수)', '4호선'), st('S7', '총신대입구(이수)', '7호선')]], '이수');
   assert.deepEqual(r.map((s) => s.id), ['S4', 'S7', 'S1']);
-});
-
-test('fulfilledLists: 일부 실패면 성공한 목록만, 모두 실패면 첫 번째 오류를 던진다', () => {
-  const a = [st('S222', '강남')];
-  const ok = (value: typeof a): PromiseSettledResult<typeof a> => ({ status: 'fulfilled', value });
-  const bad = (msg: string): PromiseSettledResult<typeof a> => ({ status: 'rejected', reason: new Error(msg) });
-  assert.deepEqual(fulfilledLists([bad('강남역 타임아웃'), ok(a)]), [a]);
-  assert.deepEqual(fulfilledLists([ok(a), ok([])]), [a, []]);
-  assert.throws(() => fulfilledLists([bad('첫 번째'), bad('두 번째')]), /첫 번째/);
-  assert.deepEqual(fulfilledLists([]), []);
 });

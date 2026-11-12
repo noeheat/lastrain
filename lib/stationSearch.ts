@@ -4,7 +4,17 @@
 import type { StationRef } from './time';
 import { nameVariants } from './transfer';
 
-/** TAGO에 보낼 검색어: '역'으로 끝나면 원래 검색어와 '역'(앞 공백 포함)을 뗀 검색어 둘 다. "강남 역" → "강남" */
+/**
+ * TAGO에 보낼 검색어 하나: '역'(앞 공백 포함)을 뗀 검색어. TAGO는 이름에 검색어가 포함된 역을 찾으므로
+ * "서울"의 결과에 "서울역"의 결과가 모두 들어 있다(2026-11-12 서울역·강남역·하남검단산역 등 7개 확인). 그래서 한 번만 부른다.
+ * '역' 하나만 입력하면 그대로 보낸다.
+ */
+export function tagoKeyword(q: string): string {
+  const t = q.trim();
+  return t.replace(/\s*역$/, '') || t;
+}
+
+/** 순위를 매길 때 맞춰 볼 이름: 원래 검색어와 '역'을 뗀 검색어 ("서울역"은 '역'까지가 이름이라 둘 다 본다) */
 export function searchTerms(q: string): string[] {
   const t = q.trim();
   const bare = t.replace(/\s*역$/, '');
@@ -27,15 +37,4 @@ export function rankStations(lists: StationRef[][], q: string): StationRef[] {
     return 2;
   };
   return all.map((s, i) => ({ s, i, r: rank(s) })).sort((a, b) => a.r - b.r || a.i - b.i).map((x) => x.s);
-}
-
-/**
- * 검색어별 TAGO 결과(Promise.allSettled) 중 성공한 목록만. 하나라도 성공하면 그것만 쓰고,
- * 모두 실패했을 때만 첫 번째 오류를 던진다 ("강남역"은 실패해도 "강남"이 성공하면 결과를 보여준다)
- */
-export function fulfilledLists(results: PromiseSettledResult<StationRef[]>[]): StationRef[][] {
-  const ok = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
-  const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
-  if (ok.length === 0 && failed) throw failed.reason;
-  return ok;
 }
