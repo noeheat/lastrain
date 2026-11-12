@@ -24,8 +24,6 @@ type Item = { person: Person; row: PlanRow | null; level: Level };
 const levelOf = (row: PlanRow | null): Level =>
   !row ? 'missed' : row.missed ? 'missed' : levelFor(row.msToTrain);
 
-// 다음 사람 화면이 아래에 보이는 높이. 홈 인디케이터(safe-area) 위로 올리고, 위 모서리를 둥글게 해서 '다음 장'으로 읽히게
-const PEEK = '(22px + env(safe-area-inset-bottom))';
 const MISSED_FIELD = '#15171b';
 
 /** 저장한 막차 경로 (직접 입력한 시각이거나 예전 저장값이면 없음) */
@@ -142,7 +140,6 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
               now={now}
               field={fieldOf(it)}
               first={i === 0}
-              last={i === items.length - 1}
               next={items[i + 1]}
               canAdd={people.length < MAX_PEOPLE}
               onEdit={() => onEditPerson(i)}
@@ -191,7 +188,6 @@ type SlideProps = {
   now: Date;
   field: string;
   first: boolean;
-  last: boolean;
   next: Item | undefined;
   canAdd: boolean;
   onEdit: () => void;
@@ -199,7 +195,7 @@ type SlideProps = {
 };
 
 /** 한 사람 화면: 가운데 큰 남은 시간, 왼쪽 아래 캡션, 오른쪽 버튼 레일 */
-function Slide({ item, now, field, first, last, next, canAdd, onEdit, onAdd }: SlideProps) {
+function Slide({ item, now, field, first, next, canAdd, onEdit, onAdd }: SlideProps) {
   const { person, row, level } = item;
   const [routeOpen, setRouteOpen] = useState(false);
   const dest = person.dest?.name ?? '';
@@ -257,7 +253,7 @@ function Slide({ item, now, field, first, last, next, canAdd, onEdit, onAdd }: S
   const leg = firstLeg(person);
   // 노선 원도 바탕과 같은 규칙: 흰 글자 대비가 나올 때까지만 어둡게 (9호선 베이지·수인분당 노랑)
   const badgeColor = fieldColor(lineColor(leg));
-  const bottom = last ? 'calc(max(20px, env(safe-area-inset-bottom)) + 28px)' : '24px';
+  const bottom = 'calc(max(20px, env(safe-area-inset-bottom)) + 28px)';
 
   return (
     <section
@@ -265,7 +261,9 @@ function Slide({ item, now, field, first, last, next, canAdd, onEdit, onAdd }: S
       data-lv={level}
       className={`relative snap-start overflow-hidden ${first ? '' : 'rounded-t-[22px]'}`}
       style={{
-        height: last ? '100dvh' : `calc(100dvh - ${PEEK})`,
+        // 한 장 = 화면 전체. 다음 사람을 아래에 살짝 보이게 했더니 주소창이 아래에 있는 브라우저(삼성 인터넷·엣지)에서
+        // 화면이 잘린 것처럼 보였다. 넘길 수 있다는 표시는 오른쪽 점과 '다음 · 이름' 태그가 맡는다
+        height: '100dvh',
         backgroundColor: field,
         // 색 바탕 위 보조 글자는 회색이 아니라 흰색을 덜어 쓴다 (BusLive 등 하위 컴포넌트도 이 값을 쓴다)
         ['--muted' as string]: 'rgba(255,255,255,.85)',

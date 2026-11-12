@@ -31,8 +31,10 @@
 ## 프로젝트 구조
 v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·DB 없음(Supabase 미사용).
 - `app/`: `page.tsx`(화면), `layout.tsx`, `manifest.ts`(PWA), 이후 `api/`(카카오·TAGO 키를 숨기는 서버 라우트)
-- `components/`: `LastTrainApp`(출발역·사람 목록 상태, localStorage `lastTrain.v1`, 시트 열기, `?now=HH:MM` 디버그), `Countdown`(홈: 출발역, 한 사람씩 넘겨 보는 카운트다운, 사람 칩), `Sheet`(아래에서 올라오는 `<dialog>`), `PersonSheet`(한 사람 편집), `StationPicker`·`TrainChoices`·`TransferPlan`(둘 다 막차 칸 `LastTrainField`를 씀), `ServiceWorker`
+- `components/`: `LastTrainApp`(출발역·사람 목록 상태, localStorage `lastTrain.v1`, 시트 열기, `?now=HH:MM` 디버그), `Countdown`(홈: 한 사람이 화면 한 장을 차지하는 세로 스냅 피드, 노선색 바탕, 오른쪽 레일 수정·경로·추가, 위 출발역 버튼, 오른쪽 페이지 점), `Icons`(선 아이콘 SVG), `Sheet`(아래에서 올라오는 `<dialog>`), `PersonSheet`(한 사람 편집), `StationPicker`·`TrainChoices`·`TransferPlan`(둘 다 막차 칸 `LastTrainField`를 씀), `ServiceWorker`
 - `lib/origin.ts`: 함께 출발하는 역(노선별 역 목록), 출발역이 바뀐 사람 판정(`isStale`)
+- `lib/lineColor.ts`: 노선 공식색(`lineColor`), 흰 글자 대비 4.6:1이 나올 때까지만 어둡게 한 화면 바탕(`fieldColor`), 노선 원 표시(`lineBadge`)
+- `PRODUCT.md`(제품: 사용자·차별점·말투)·`DESIGN.md`(디자인 체계: 색·글꼴·상태 규칙)·`.impeccable/`(방향 계약서 `surfaces/`, `design.json`): 화면을 바꿀 때 먼저 읽는다
 - `lib/time.ts`: 순수 시간 로직 — 운행일 경계 04:00, 카운트다운은 막차 시각까지 (도보·여유 시간 없음), 색 단계
 - `lib/holidays.ts`: 공휴일 목록(2026~2028, 천문연구원 월력요항). 공휴일이면 `dailyTypeCode`가 휴일(03)
 - `lib/rateLimit.ts`: API 호출 제한(IP별 1분, 메모리). 각 `app/api/*/route.ts` 첫 줄에서 `rateLimit(req, '<라우트>')`
