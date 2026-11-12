@@ -26,3 +26,15 @@ body {
 :focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
 input { caret-color: #ffffff; }
 
+
+/* 홈 피드: 넘길 때 앞 사람 카드는 제자리에 머물며(스크롤만큼 내려 상쇄) 살짝 작아지고 어두워진다.
+   --cover(0~1)는 Countdown의 스크롤 처리에서 장마다 쓴다 */
+.feed-card {
+  transform: translateY(calc(var(--cover, 0) * 100%)) scale(calc(1 - var(--cover, 0) * 0.06));
+  transform-origin: 50% 40%;
+}
+.feed-dim { opacity: calc(var(--cover, 0) * 0.55); }
+@media (prefers-reduced-motion: reduce) {
+  .feed-card { transform: none; }
+  .feed-dim { opacity: 0; }
+}

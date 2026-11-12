@@ -92,12 +92,15 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
     const el = scroller.current;
     const first = el?.children[0] as HTMLElement | undefined;
     if (!el || !first) return;
-    const i = Math.min(people.length - 1, Math.round(el.scrollTop / first.offsetHeight));
+    const pos = el.scrollTop / first.offsetHeight; // 0 = 첫 사람, 1 = 둘째 사람 …
+    // 넘기는 동안 앞 사람 장은 제자리에 머물며 덮인다. 덮인 정도(0~1)를 CSS 변수로 (매 프레임 렌더링하지 않게 직접 쓴다)
+    Array.from(el.children).forEach((c, k) => (c as HTMLElement).style.setProperty('--cover', String(Math.min(1, Math.max(0, pos - k)))));
+    const i = Math.min(people.length - 1, Math.round(pos));
     if (i !== current) setCurrent(i);
   };
   const jump = (i: number) => {
     const slide = scroller.current?.children[i] as HTMLElement | undefined;
-    slide?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (slide) scroller.current?.scrollTo({ top: slide.offsetTop, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
 
   // 상태 표시줄(iOS·안드로이드) 색도 보고 있는 사람 화면색에 맞춘다
@@ -259,18 +262,18 @@ function Slide({ item, now, field, first, next, canAdd, onEdit, onAdd }: SlidePr
     <section
       aria-label={`${person.name}${dest ? ` → ${dest}` : ''}`}
       data-lv={level}
-      className={`relative snap-start overflow-hidden ${first ? '' : 'rounded-t-[22px]'}`}
+      className="relative h-dvh snap-start"
       style={{
         // 한 장 = 화면 전체. 다음 사람을 아래에 살짝 보이게 했더니 주소창이 아래에 있는 브라우저(삼성 인터넷·엣지)에서
         // 화면이 잘린 것처럼 보였다. 넘길 수 있다는 표시는 오른쪽 점과 '다음 · 이름' 태그가 맡는다
-        height: '100dvh',
-        backgroundColor: field,
         // 색 바탕 위 보조 글자는 회색이 아니라 흰색을 덜어 쓴다 (BusLive 등 하위 컴포넌트도 이 값을 쓴다)
         ['--muted' as string]: 'rgba(255,255,255,.85)',
         ['--state' as string]: '#ffffff',
         ['--error' as string]: '#ffe1e1',
       }}
     >
+      {/* 카드: 넘기면 다음 사람 카드가 둥근 위 모서리로 이 카드를 덮으며 올라오고, 이 카드는 제자리에서 작아지며 어두워진다 (globals.css .feed-card) */}
+      <div className={`feed-card absolute inset-0 overflow-hidden ${first ? '' : 'rounded-t-[22px]'}`} style={{ backgroundColor: field }}>
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0 bg-[#8f1020] transition-[height] duration-1000 ease-linear"
@@ -347,6 +350,8 @@ function Slide({ item, now, field, first, next, canAdd, onEdit, onAdd }: SlidePr
           <RailButton label="경로" pressed={routeOpen} onClick={() => setRouteOpen((v) => !v)}><RouteIcon /></RailButton>
         )}
         {canAdd && <RailButton label="추가" onClick={onAdd}><PlusIcon /></RailButton>}
+      </div>
+      <div aria-hidden className="feed-dim pointer-events-none absolute inset-0 bg-black" />
       </div>
     </section>
   );
