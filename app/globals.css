@@ -28,13 +28,32 @@ input { caret-color: #ffffff; }
 
 
 /* 홈 피드: 넘길 때 앞 사람 카드는 제자리에 머물며(스크롤만큼 내려 상쇄) 살짝 작아지고 어두워진다.
-   --cover(0~1)는 Countdown의 스크롤 처리에서 장마다 쓴다 */
-.feed-card {
-  transform: translateY(calc(var(--cover, 0) * 100%)) scale(calc(1 - var(--cover, 0) * 0.03));
-  transform-origin: 50% 40%;
+   스크롤 연동 애니메이션이라 브라우저가 스크롤과 같은 프레임에 그린다(JS로 하면 한 프레임 늦어 떨림).
+   장(.feed-slide)이 화면을 떠나는 구간(exit 0%→100%)에 맞춰 진행. 지원하지 않는 브라우저는 평범한 스크롤 */
+@supports (animation-timeline: view()) {
+  .feed-slide { view-timeline: --slide block; }
+  .feed-card {
+    transform-origin: 50% 40%;
+    animation: feed-cover linear both;
+    animation-timeline: --slide;
+    animation-range: exit 0% exit 100%;
+  }
+  .feed-dim {
+    opacity: 0;
+    animation: feed-dim linear both;
+    animation-timeline: --slide;
+    animation-range: exit 0% exit 100%;
+  }
 }
-.feed-dim { opacity: calc(var(--cover, 0) * 0.35); }
+@keyframes feed-cover {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(100%) scale(0.97); }
+}
+@keyframes feed-dim {
+  from { opacity: 0; }
+  to { opacity: 0.35; }
+}
+.feed-dim { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
-  .feed-card { transform: none; }
-  .feed-dim { opacity: 0; }
+  .feed-card, .feed-dim { animation: none; }
 }

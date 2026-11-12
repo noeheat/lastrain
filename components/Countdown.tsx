@@ -92,10 +92,9 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
     const el = scroller.current;
     const first = el?.children[0] as HTMLElement | undefined;
     if (!el || !first) return;
-    const pos = el.scrollTop / first.offsetHeight; // 0 = 첫 사람, 1 = 둘째 사람 …
-    // 넘기는 동안 앞 사람 장은 제자리에 머물며 덮인다. 덮인 정도(0~1)를 CSS 변수로 (매 프레임 렌더링하지 않게 직접 쓴다)
-    Array.from(el.children).forEach((c, k) => (c as HTMLElement).style.setProperty('--cover', String(Math.min(1, Math.max(0, pos - k)))));
-    const i = Math.min(people.length - 1, Math.round(pos));
+    // 넘길 때 앞 카드가 덮이는 효과는 CSS 스크롤 연동 애니메이션이 맡는다 (globals.css .feed-card).
+    // JS로 스크롤마다 위치를 보정하면 한 프레임씩 늦어 카드가 떨린다
+    const i = Math.min(people.length - 1, Math.round(el.scrollTop / first.offsetHeight));
     if (i !== current) setCurrent(i);
   };
   const jump = (i: number) => {
@@ -253,7 +252,7 @@ function Slide({ item, now, field, next, canAdd, onEdit, onAdd }: SlideProps) {
     <section
       aria-label={`${person.name}${dest ? ` → ${dest}` : ''}`}
       data-lv={level}
-      className="relative h-dvh snap-start"
+      className="feed-slide relative h-dvh snap-start"
       style={{
         // 한 장 = 화면 전체. 다음 사람을 아래에 살짝 보이게 했더니 주소창이 아래에 있는 브라우저(삼성 인터넷·엣지)에서
         // 화면이 잘린 것처럼 보였다. 넘길 수 있다는 표시는 오른쪽 점과 '다음 · 이름' 태그가 맡는다
