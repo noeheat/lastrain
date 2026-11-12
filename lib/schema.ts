@@ -22,6 +22,7 @@ export const RouteLegSchema = z.object({
   estimated: z.boolean().optional(),
   arsId: z.string().regex(/^\d{5}$/).optional(),
   routeId: z.string().regex(/^\d{6,12}$/).optional(),
+  trainNo: z.string().regex(/^[0-9A-Z]{1,8}$/).optional(), // 지하철 열차 번호 (서울 시간표, 실시간 도착 조회용)
 });
 
 export const PersonSchema = z.object({
@@ -83,6 +84,11 @@ export const BusQuerySchema = z.object({
 export const BusLiveQuerySchema = z.object({
   arsId: z.string().regex(/^\d{5}$/, '정류장 번호 형식이 잘못됐어요'),
   routeId: z.string().regex(/^\d{6,12}$/, '노선 ID 형식이 잘못됐어요'),
+});
+
+// 지하철 실시간 도착 (탈 역 이름)
+export const SubwayLiveQuerySchema = z.object({
+  station: z.string().trim().min(1).max(30),
 });
 
 export const StationLinesQuerySchema = z.object({

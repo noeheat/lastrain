@@ -25,6 +25,7 @@ export type Train = {
   min: number; // 운행일 기준 분 (04:00 이전은 +24h)
   endId: string;
   endName: string;
+  no?: string; // 열차 번호 (서울 시간표에만 있다. 실시간 도착과 같은 열차를 잇는 데 쓴다)
 };
 
 export type RouteInput = {

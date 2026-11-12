@@ -84,6 +84,6 @@ export async function seoulLegTrains(
   ]);
   if (!oU.length && !oD.length) return null;
   return reachingTrains({ originCode, destCode, origin: { U: oU, D: oD }, dest: [...dU, ...dD] }).map((t) => ({
-    dep: t.min, arr: t.arr ?? t.min + legMinutes, endName: t.endName, estimated: t.arr == null,
+    dep: t.min, arr: t.arr ?? t.min + legMinutes, endName: t.endName, estimated: t.arr == null, no: t.no,
   }));
 }

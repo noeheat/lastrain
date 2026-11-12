@@ -41,7 +41,7 @@ const clock = (min: number) => {
   return `${String(Math.floor(x / 60)).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`;
 };
 
-type NumberedTrain = Train & { no: string };
+type NumberedTrain = Train & { no: string }; // 서울 시간표 열차는 번호가 늘 있다
 
 /** 응답 항목 → 시각 순 열차 목록. 번호·시각·종착역이 없거나 이 역에서 끝나는 열차는 뺀다. */
 export function toSeoulTrains(rows: SeoulRow[], stationCode: string): NumberedTrain[] {
@@ -96,7 +96,7 @@ export function reachingTrains(input: SeoulInput): (Train & { dir: Dir; arr: num
   for (const dir of ['U', 'D'] as const) {
     for (const { no, ...t } of toSeoulTrains(input.origin[dir], input.originCode)) {
       const arr = arrivalAt({ no, ...t }, destByNo, input.destCode);
-      if (arr !== undefined) out.push({ ...t, dir, arr });
+      if (arr !== undefined) out.push({ ...t, no, dir, arr });
     }
   }
   return out.sort((a, b) => a.min - b.min);
@@ -110,11 +110,11 @@ export function findLastTrainByNumber(input: SeoulInput, candidates = 6): LastTr
   };
   const lastReach = reachingTrains(input).at(-1);
   const last: LastTrainResult['last'] = lastReach
-    ? { time: lastReach.time, min: lastReach.min, endId: lastReach.endId, endName: lastReach.endName, dir: lastReach.dir }
+    ? { time: lastReach.time, min: lastReach.min, endId: lastReach.endId, endName: lastReach.endName, no: lastReach.no, dir: lastReach.dir }
     : null;
-  const strip = (list: NumberedTrain[]): Train[] => list.map(({ no: _no, ...t }) => t);
   return {
     last,
-    candidates: { U: strip(trains.U.slice(-candidates)), D: strip(trains.D.slice(-candidates)) },
+    // 직접 고른 열차도 실시간으로 이을 수 있게 열차 번호를 같이 준다
+    candidates: { U: trains.U.slice(-candidates), D: trains.D.slice(-candidates) },
   };
 }

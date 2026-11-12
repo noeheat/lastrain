@@ -150,6 +150,7 @@ export function mixedRoutes(body: KakaoBody, origin: string, dest: string): Subw
 /** 구간 열차: 출발역에서 떠나는 시각과 내릴 역 도착 시각(운행일 기준 분) */
 export type LegTrain = {
   dep: number; arr: number; endName: string; estimated: boolean;
+  no?: string; // 열차 번호 (서울 시간표 구간만, 실시간 도착 조회용)
   line?: string; // 버스 구간에서 실제로 고른 노선 (구간의 대표 노선과 다를 수 있다)
   arsId?: string; routeId?: string; // 버스: 탈 정류장 고유번호·노선 ID (실시간 도착 조회용)
   holidayForSaturday?: boolean; // 토요일 시간표가 없어 휴일 시간표로 계산

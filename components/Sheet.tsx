@@ -44,6 +44,10 @@ export function Sheet({ open, title, onClose, children }: Props) {
           </button>
         </div>
         {open && children}
+        {/* 서울 열린데이터광장 이용약관 제10조 ③: 결과를 보여주는 화면에 출처 표시 */}
+        <p className="mt-5 text-center text-[0.75rem] leading-relaxed text-[var(--muted)]">
+          시간표·실시간 정보: 서울특별시 공공데이터, 국토교통부 TAGO, 카카오
+        </p>
       </div>
     </dialog>
   );

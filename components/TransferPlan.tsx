@@ -28,8 +28,9 @@ type Props = {
 };
 
 const legsOf = (plan: PlanResult): RouteLeg[] =>
-  plan.legs.map(({ line, from, to, dep, arr, endName, kind, estimated, arsId, routeId }) => ({
+  plan.legs.map(({ line, from, to, dep, arr, endName, kind, estimated, arsId, routeId, trainNo }) => ({
     line: kind ? line : lineLabel(line), from, to, dep, arr, endName,
+    ...(!kind && trainNo && { trainNo }), // 지하철 열차 번호 (실시간 도착 조회용)
     ...(kind && { kind, estimated: estimated || undefined, arsId, routeId }), // 버스 구간 (지하철 추정은 저장하지 않는다)
   }));
 

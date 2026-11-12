@@ -36,7 +36,10 @@ export function TrainChoices({ origin, dest, train, autoFill, onChoose, invalid,
     trainRef.current = train;
   });
 
-  const legOf = (t: Train): RouteLeg[] => [{ line: lineLabel(origin.line), from: origin.name, to: dest.name, dep: t.time, endName: t.endName }];
+  const legOf = (t: Train): RouteLeg[] => [{
+    line: lineLabel(origin.line), from: origin.name, to: dest.name, dep: t.time, endName: t.endName,
+    ...(t.no && { trainNo: t.no }), // 서울 시간표 열차 번호 (실시간 도착 조회용)
+  }];
   // 시각 → 그 시각에 떠나는 열차의 경로. 막차와 같은 시각이면 막차를 고른다
   const routeFor = (r: LastTrainResult, time: string): RouteLeg[] | undefined => {
     const t = r.last?.time === time ? r.last : [...r.candidates.U, ...r.candidates.D].find((c) => c.time === time);

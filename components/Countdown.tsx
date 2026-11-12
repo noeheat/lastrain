@@ -7,6 +7,7 @@ import { MAX_PEOPLE } from '@/lib/schema';
 import { legName, lineLabel } from '@/lib/transfer';
 import { fieldColor, lineBadge, lineColor } from '@/lib/lineColor';
 import { BusLive } from './BusLive';
+import { SubwayLive } from './SubwayLive';
 import { ChevronDownIcon, PencilIcon, PlusIcon, RouteIcon } from './Icons';
 
 type Props = {
@@ -196,6 +197,8 @@ function Slide({ item, now, field, next, canAdd, onEdit, onAdd }: SlideProps) {
   const one = route?.length === 1 ? route[0]! : null;
   // 첫 구간이 버스면 실시간 막차 도착을 받아, 예정보다 일찍 오면 카운트다운을 앞당긴다 (늦어지면 안내만)
   const firstBus = route?.[0]?.kind === 'bus' && route[0].arsId && route[0].routeId ? route[0] : null;
+  // 첫 구간이 1~9호선이고 시간표 열차 번호가 있으면 지하철 실시간으로 같은 열차를 본다 (일찍 오면 앞당김, 늦으면 안내만)
+  const firstSubway = route?.[0] && !route[0].kind && route[0].trainNo && /^[1-9]호선$/.test(route[0].line) ? route[0] : null;
   // 한 번 본 실시간 막차 시각은 기억한다. 막차가 지나가면 실시간 응답에서 사라지는데, 그때 시간표로 되돌아가면 안 된다
   const [liveFirst, setLiveFirst] = useState<Date | null>(null);
   const [liveEnded, setLiveEnded] = useState(false);
@@ -303,6 +306,9 @@ function Slide({ item, now, field, next, canAdd, onEdit, onAdd }: SlideProps) {
         <p className="mt-1.5 text-[0.92rem] leading-snug text-white/90">{sub}</p>
         {running && multi && !routeOpen && (
           <p className="mt-1 text-[0.85rem] text-white/85">{route.map((l) => legName(l)).join(' → ')}</p>
+        )}
+        {running && firstSubway && (
+          <SubwayLive station={firstSubway.from} line={firstSubway.line} trainNo={firstSubway.trainNo!} due={row.trainAt} now={now} onLive={onFirstLive} />
         )}
         {running && one && firstBus && (
           <BusLive arsId={firstBus.arsId!} routeId={firstBus.routeId!} line={firstBus.line} due={row.trainAt} now={now} onLive={onFirstLive} />
