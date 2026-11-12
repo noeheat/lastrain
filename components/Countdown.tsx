@@ -103,13 +103,6 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
     if (slide) scroller.current?.scrollTo({ top: slide.offsetTop, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   };
 
-  // 상태 표시줄(iOS·안드로이드) 색도 보고 있는 사람 화면색에 맞춘다
-  const shown = items[Math.min(current, items.length - 1)];
-  const top = shown ? fieldOf(shown) : '#0b0d10';
-  useEffect(() => {
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', top);
-  }, [top]);
-
   const originLabel = origin.text ? (origin.text.endsWith('역') ? origin.text : `${origin.text}역`) : '';
 
   return (
@@ -142,7 +135,6 @@ export function Countdown({ origin, people, nowOffset, onEditOrigin, onEditPerso
               item={it}
               now={now}
               field={fieldOf(it)}
-              first={i === 0}
               next={items[i + 1]}
               canAdd={people.length < MAX_PEOPLE}
               onEdit={() => onEditPerson(i)}
@@ -190,7 +182,6 @@ type SlideProps = {
   item: Item;
   now: Date;
   field: string;
-  first: boolean;
   next: Item | undefined;
   canAdd: boolean;
   onEdit: () => void;
@@ -198,7 +189,7 @@ type SlideProps = {
 };
 
 /** 한 사람 화면: 가운데 큰 남은 시간, 왼쪽 아래 캡션, 오른쪽 버튼 레일 */
-function Slide({ item, now, field, first, next, canAdd, onEdit, onAdd }: SlideProps) {
+function Slide({ item, now, field, next, canAdd, onEdit, onAdd }: SlideProps) {
   const { person, row, level } = item;
   const [routeOpen, setRouteOpen] = useState(false);
   const dest = person.dest?.name ?? '';
@@ -273,7 +264,7 @@ function Slide({ item, now, field, first, next, canAdd, onEdit, onAdd }: SlidePr
       }}
     >
       {/* 카드: 넘기면 다음 사람 카드가 둥근 위 모서리로 이 카드를 덮으며 올라오고, 이 카드는 제자리에서 작아지며 어두워진다 (globals.css .feed-card) */}
-      <div className={`feed-card absolute inset-0 overflow-hidden ${first ? '' : 'rounded-t-[22px]'}`} style={{ backgroundColor: field }}>
+      <div className={`feed-card absolute inset-0 overflow-hidden rounded-t-[22px]`} style={{ backgroundColor: field }}>
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0 bg-[#8f1020] transition-[height] duration-1000 ease-linear"
