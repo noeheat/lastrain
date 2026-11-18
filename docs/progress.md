@@ -147,4 +147,4 @@
     - **11-05 결정: 기능을 더 만든 뒤 공개한다.** 공개할 때 `main`을 fast-forward해 push하면 Production이 자동 배포된다. 그 전에 Production을 숨기려면 Vercel Deployment Protection 설정(직접).
 16. **정리할 것**
     - ~~`AGENTS.md`~~ 11-05 커밋 (`next dev`가 다시 만드는 파일이라 커밋해 두는 편이 깨끗하다)
-    - CLAUDE.md "프로젝트 기록"(서비스명, 배포일, URL)은 공개할 때 채운다.
+    - `CLAUDE.local.md`(커밋 안 함) "프로젝트 기록"(서비스명, 배포일, URL)은 공개할 때 채운다.

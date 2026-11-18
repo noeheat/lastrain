@@ -12,3 +12,5 @@ next-env.d.ts
 *.tsbuildinfo
 .vercel
 spike/out/
+# 개인 메모
+CLAUDE.local.md

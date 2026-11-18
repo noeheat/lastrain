@@ -1,32 +1,13 @@
 # CLAUDE.md
 
-이 파일은 모든 프로젝트 루트에 복사해서 쓴다. 프로젝트가 끝날 때마다 "교훈" 섹션을 업데이트한다.
+막차 카운트다운 저장소에서 작업할 때 읽는 안내. 개인 공통 설정은 `~/.claude/CLAUDE.md`, 공개하지 않을 메모는 `CLAUDE.local.md`(gitignore)에 있다.
 
-## 나에 대해
-- 컴퓨터공학과 3학년. 아직 코드 리뷰 실력을 키우는 중.
-- 코드를 바꿀 때 무엇을, 왜 바꿨는지 짧게 한국어로 설명해줘. 새로 등장한 개념은 한 줄로 알려줘.
-
-## 기본 스택 (특별한 이유 없으면 바꾸지 말 것)
-- Next.js (App Router) + TypeScript (strict)
-- Supabase: DB, Auth, Storage — 리전은 서울(ap-northeast-2)
-- Vercel 배포 — 함수 리전 서울(icn1). DB와 서버는 항상 같은 리전.
-- Tailwind CSS + shadcn/ui
-- 패키지 매니저: pnpm
-
-## 작업 방식
-1. 구현 전에 먼저 계획을 짧게 보여주고, 큰 결정(DB 스키마, 인증 방식, 외부 서비스 추가)은 내 확인을 받는다.
-2. 기능은 작게 쪼개서 하나씩 완성하고, 하나 끝날 때마다 커밋한다.
-3. 새 라이브러리는 꼭 필요할 때만 추가하고 이유를 말해준다.
-4. 같은 에러로 두 번 이상 실패하면 계속 시도하지 말고 멈춰서 원인 가설을 정리해 보고한다. (토큰 낭비 방지)
-5. 전체 파일을 다시 쓰지 말고 필요한 부분만 수정한다.
-6. 불필요한 파일 탐색을 줄이기 위해 아래 "프로젝트 구조"를 먼저 참고한다.
-
-## 품질 기준
-- 사용자 입력은 서버에서 반드시 검증 (zod).
-- Supabase 테이블은 RLS(Row Level Security)를 항상 켠다.
-- 비밀 키는 .env.local에만, 절대 커밋하지 않는다.
-- 엣지 케이스 체크: 빈 값, 중복 요청, 로그인 만료, 네트워크 실패, 동시 수정.
-- 배포 전 `pnpm build`와 타입 체크가 통과해야 한다.
+## 이 프로젝트의 규칙
+- 스택: Next.js(App Router) + TypeScript(strict) + Tailwind, Vercel(함수 리전 서울 icn1), pnpm. 로그인·DB 없음.
+- 외부 API 키는 서버 라우트(`app/api/*`) 안에서만 쓴다. 클라이언트로 나가는 `NEXT_PUBLIC_` 키를 만들지 않는다.
+- 새 API 라우트는 첫 줄에 `rateLimit`, 입력은 `lib/schema.ts`의 zod로 검증한다.
+- 막차를 판정할 수 없으면 "안 간다"로 본다. 추정한 값은 화면에 "(추정)"으로 표시한다.
+- 커밋 전 `pnpm test`와 `pnpm typecheck`, 배포 전 `pnpm build`가 통과해야 한다.
 
 ## 프로젝트 구조
 v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·DB 없음(Supabase 미사용).
@@ -52,15 +33,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `spike/`: 외부 API 검증 스크립트(TMAP·TAGO·카카오). `node --env-file=.env.local spike/...`로 실행
 - `docs/`: 사람이 읽는 문서. 진행 상황·남은 작업(`progress.md`), 학습 노트(`learning-notes.md`), 지난 세션 기록. 앱 코드와 무관
 
-## 프로젝트 기록
-- 서비스명:
-- 시작일 / 배포일:
-- 사용한 토큰(사용량 %):
-- URL:
-- 사용자 수 / 매출:
-
 ## 교훈 (삽질할 때마다 한 줄씩 추가)
-- DB 서버와 배포 서버는 같은 리전에 둔다. (멀면 요청마다 150ms+ 지연)
 - TMAP 대중교통 API의 searchDttm·service는 자정 이후 운행을 반영하지 못한다(00:00에 전 노선 운행종료, 24시+ 표기는 400). 막차는 TAGO 지하철 시간표(depTime, endSubwayStationNm)로 계산한다.
 - TAGO 시간표엔 열차 번호가 없어, 출발역·도착역 시간표를 짝지어 "이 열차가 도착역을 지나는지" 판정할 수 없다(배차 3~5분이면 다른 열차와 짝지어지고, 9호선처럼 급행이 섞이면 소요시간 추정도 깨짐). `spike/tago-reach.js` 참고.
 - KRIC 역사별 운행시각표는 열차 번호(trnNo)와 종착역(tmnStinCd)을 주지만, 2호선 토·휴일과 4호선·3호선·1호선 토요일(dayCd 7)은 TAGO처럼 비어 있다(2026-11 확인, 코드표 미확인). `spike/kric-timetable.js` 참고.
