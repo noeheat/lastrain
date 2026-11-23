@@ -1,6 +1,6 @@
 # 막차 카운트다운 — 진행 상황과 남은 작업
 
-> 2026-11-23 기준. 2026-11-23 `v2/nextjs`를 `main`에 합쳐 Production(https://lastrain-ukck.vercel.app)에 공개 배포했다(15번). Preview(https://lastrain-ukck-git-v2-nextjs-noeheat.vercel.app)는 Vercel 로그인 필요.
+> 2026-11-23 기준. 2026-11-23 `v2/nextjs`를 `main`에 합쳐 Production(https://lastrain.vercel.app, 프로젝트 기본 주소 https://lastrain-ukck.vercel.app도 열림)에 공개 배포했다(15번). Preview(https://lastrain-ukck-git-v2-nextjs-noeheat.vercel.app)는 Vercel 로그인 필요.
 > 제품 정의는 `PRODUCT.md`, 디자인 체계는 `DESIGN.md`에 있다.
 > 10월 29일까지의 자세한 과정은 `session-notes.md`, 배운 점은 `learning-notes.md`에 있다.
 
@@ -145,7 +145,7 @@
     - 11-05 확인: `main`은 `v2/nextjs`의 조상이라 fast-forward로 합칠 수 있다. GitHub Pages는 이미 꺼져 있다. API 키 3개는 Vercel Production에도 등록돼 있다.
     - Production(https://lastrain-ukck.vercel.app)은 로그인 없이 열리지만 `main`의 v2 1단계(API 없음)다.
     - 11-05 결정: 기능을 더 만든 뒤 공개한다.
-    - **11-23 공개:** `v2/nextjs`를 `main`에 fast-forward하고 push해 Production이 자동 배포됐다. 배포 뒤 역 검색 API(`/api/stations`)가 실제 결과를 돌려주고, 막차 API(`/api/last-train`)가 강남→홍대입구 2호선 평일 00:21을 돌려주는 것을 확인했다. 공개 전에 next를 16.4.6으로 올렸다(16.4.3 보안 권고). 실시간 도착 보정과 휴대폰 PWA(14번)는 아직 Production에서 확인하지 못했다. 그 전까지 Production은 v2 1단계(API 없음)였다.
+    - **11-23 공개:** `v2/nextjs`를 `main`에 fast-forward하고 push해 Production이 자동 배포됐다. 배포 뒤 역 검색 API(`/api/stations`)가 실제 결과를 돌려주고, 막차 API(`/api/last-train`)가 강남→홍대입구 2호선 평일 00:21을 돌려주는 것을 확인했다. 공개 전에 next를 16.4.6으로 올렸다(16.4.3 보안 권고). 실시간 도착 보정과 휴대폰 PWA(14번)는 아직 Production에서 확인하지 못했다. 그 전까지 Production은 v2 1단계(API 없음)였다. 같은 날 제안서에 적은 주소에 맞춰 Vercel 도메인 `lastrain.vercel.app`을 이 프로젝트에 붙였다(사용자가 대시보드에서 추가). GitHub About 링크도 이 주소다.
 16. **정리할 것**
     - ~~`AGENTS.md`~~ 11-05 커밋 (`next dev`가 다시 만드는 파일이라 커밋해 두는 편이 깨끗하다)
     - `CLAUDE.local.md`(커밋 안 함) "프로젝트 기록": 11-23 배포일·URL 채움. 서비스명은 아직 비어 있다.

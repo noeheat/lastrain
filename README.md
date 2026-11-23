@@ -2,7 +2,7 @@
 
 함께 있는 사람들의 막차를 한 화면에서 세어 주는 웹앱.
 
-**앱:** https://lastrain-ukck.vercel.app
+**앱:** https://lastrain.vercel.app
 
 <p>
   <img src="docs/screenshots/1-input.jpg" width="200" alt="사람 편집: 도착역과 자동으로 찾은 막차 시각">
