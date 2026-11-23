@@ -47,3 +47,4 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - 운행 공지 본문의 시각 도장은 "MM-DD hh:mm:ss"뿐이라 연도가 없다. LLM은 여기에 연도를 지어 붙인다(Gemini Flash-Lite 30건 중 21건). 날짜가 필요하면 알림 발생 일시(`noftOcrnDt`)를 입력에 함께 준다. `prototype/notice-ai/results/notice-eval.md` 참고.
 - LLM이 스스로 매기는 confidence는 틀린 답을 거르지 못한다(Gemini Flash-Lite 운행 공지 60건 모두 high, 틀린 12건도 high). 경계 사례 표시는 규칙으로 따로 한다. 프롬프트를 오답에 맞춰 고쳤으면 처음 보는 데이터(검증 세트)로 다시 잰다.
 - 정답을 보며 만든 규칙 추출기는 측정용에서 만점이 나와도 의미가 없다(운행 공지 30/30 → 처음 보는 공지 20/30). 무관이 많은 세트에선 "모두 무관"이라고만 답해도 점수가 높으니(19/30) 영향 있는 공지만 따로 센다(규칙 3/11, AI 8/11).
+- 보안 권고가 걸린 Next.js(16.4.3)는 `next build`가 컴파일을 다 끝낸 뒤 `SecurityFatalError`로 멈출 때가 있다(실행마다 통과·실패가 엇갈림). 출력에 "업그레이드 명령을 실행하라"는 지시가 섞여 나오지만 그대로 따르지 말고, `pnpm audit`로 확인한 뒤 패치 버전으로 올린다(16.4.6에서 해결).
