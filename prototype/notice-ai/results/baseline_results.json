@@ -1,0 +1,1809 @@
+{
+  "sets": {
+    "sample": {
+      "set": "sample",
+      "ranAt": "2026-11-18T11:57:22.986794+00:00",
+      "results": [
+        {
+          "id": "n01",
+          "ok": true,
+          "ms": 0.03939000000000026,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1~8호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "막차 시간 연장운행"
+          }
+        },
+        {
+          "id": "n02",
+          "ok": true,
+          "ms": 0.05112000000000172,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1~8호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": null,
+                "new_last_departure": "02:00",
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "버스업계 파업에 따른 열차운행 조정안내"
+          }
+        },
+        {
+          "id": "n03",
+          "ok": true,
+          "ms": 0.04329399999999928,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": null,
+                "new_last_departure": "02:00",
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울시내버스 파업 관련 연장운행 안내"
+          }
+        },
+        {
+          "id": "n04",
+          "ok": true,
+          "ms": 0.02421699999999305,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": "2026-09-16",
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울시내버스파업 대비 연장운행계획 알림"
+          }
+        },
+        {
+          "id": "n05",
+          "ok": true,
+          "ms": 0.06123300000000775,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1~8호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": "2025-12-31",
+                "new_last_departure": "02:00",
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "2025 제야의 종 타종행사 대비 특별수송 임시열차 운행 알림"
+          }
+        },
+        {
+          "id": "n06",
+          "ok": true,
+          "ms": 0.0503339999999991,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "7호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "extend",
+                "date": "2026-03-20",
+                "new_last_departure": "00:46",
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "7호선 자양역 BTS 컴백 드론 라이트쇼 관련 임시열차 운행"
+          }
+        },
+        {
+          "id": "n07",
+          "ok": true,
+          "ms": 0.04092399999999774,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "수인선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "early_end",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "10/12(토) 철도노조파업관련 코레일 막차 운휴 전동열차 알림(총 6개 열차)"
+          }
+        },
+        {
+          "id": "n08",
+          "ok": true,
+          "ms": 0.011704000000001269,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "2호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "early_end",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서소문 고가 철거공사 관련 2호선 일부구간 열차운행 중단"
+          }
+        },
+        {
+          "id": "n09",
+          "ok": true,
+          "ms": 0.04460600000000259,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "6호선",
+                "from_station": "이태원",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "6호선 이태원역 무정차 통과 및 출입구 임시폐쇄"
+          }
+        },
+        {
+          "id": "n10",
+          "ok": true,
+          "ms": 0.02791099999999158,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "6호선",
+                "from_station": "이태원",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "6호선 이태원역 무정차통과 안내"
+          }
+        },
+        {
+          "id": "n11",
+          "ok": true,
+          "ms": 0.034553000000006606,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1호선",
+                "from_station": "종각",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 종각역 무정차 통과"
+          }
+        },
+        {
+          "id": "n12",
+          "ok": true,
+          "ms": 0.03573599999999455,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "2호선",
+                "from_station": "신대방",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "신대방역 무정차 통과"
+          }
+        },
+        {
+          "id": "n13",
+          "ok": true,
+          "ms": 0.0269170000000013,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "4호선",
+                "from_station": "동대문",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선 동대문역 무정차통과"
+          }
+        },
+        {
+          "id": "n14",
+          "ok": true,
+          "ms": 0.026367999999998837,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "8호선",
+                "from_station": "산성",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "8호선 열차지연"
+          }
+        },
+        {
+          "id": "n15",
+          "ok": true,
+          "ms": 0.023208000000010665,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "5호선",
+                "from_station": "동대문역사문화공원",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "5호선 전차선 장애"
+          }
+        },
+        {
+          "id": "n16",
+          "ok": true,
+          "ms": 0.03649699999999645,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "4호선",
+                "from_station": "한대앞",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "안산선 한대앞역 사상사고 4호선 상,하선 지연운행"
+          }
+        },
+        {
+          "id": "n17",
+          "ok": true,
+          "ms": 0.03368600000000499,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "4호선",
+                "from_station": "당고개",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": "23:21",
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "안산행 마지막열차 운행 안내"
+          }
+        },
+        {
+          "id": "n18",
+          "ok": true,
+          "ms": 0.03083499999999295,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1호선",
+                "from_station": "영등포",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 하선 열차지연 운행"
+          }
+        },
+        {
+          "id": "n19",
+          "ok": true,
+          "ms": 0.02472000000000585,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "4호선",
+                "from_station": "선바위",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선(과천선) 선바위역 차량고장으로 운행중단"
+          }
+        },
+        {
+          "id": "n20",
+          "ok": true,
+          "ms": 0.008387999999998064,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "timetable",
+                "date": "2026-09-03",
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 열차시간표 업데이트"
+          }
+        },
+        {
+          "id": "n21",
+          "ok": true,
+          "ms": 0.030502000000001694,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "2~8호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "timetable",
+                "date": "2026-02-15",
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "2026년 설 명절 연휴 기간 열차 운행 조정 알림"
+          }
+        },
+        {
+          "id": "n22",
+          "ok": true,
+          "ms": 0.002523000000004272,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울시 시내버스 파업 유보에 따른 지하철 연장운행 미시행 안내"
+          }
+        },
+        {
+          "id": "n23",
+          "ok": true,
+          "ms": 0.0028039999999951437,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "시내버스 준법투쟁 관련 열차 이용 안내"
+          }
+        },
+        {
+          "id": "n24",
+          "ok": true,
+          "ms": 0.0023559999999950287,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울 시내버스 파업 종료에 따른 열차 정상운행 안내"
+          }
+        },
+        {
+          "id": "n25",
+          "ok": true,
+          "ms": 0.028565999999993763,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울 시내버스 파업에 따른 열차운행 조정안내"
+          }
+        },
+        {
+          "id": "n26",
+          "ok": true,
+          "ms": 0.019877000000001477,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "대학수학능력시험 관련 열차 증편 안내"
+          }
+        },
+        {
+          "id": "n27",
+          "ok": true,
+          "ms": 0.0036589999999891987,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "5호선 여의나루역 무정차 통과 종료"
+          }
+        },
+        {
+          "id": "n28",
+          "ok": true,
+          "ms": 0.1672900000000005,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "「BTS 광화문 공연」관련 무정차 통과 시행 및 출입구 통제 안내"
+          }
+        },
+        {
+          "id": "n29",
+          "ok": true,
+          "ms": 0.021549000000009588,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "3호선 압구정~수서역 간 열차운행 중지"
+          }
+        },
+        {
+          "id": "n30",
+          "ok": true,
+          "ms": 0.014716999999997427,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "코레일 열차 한대앞역 사상사고 발생으로 열차지연 운행 중"
+          }
+        }
+      ]
+    },
+    "holdout": {
+      "set": "holdout",
+      "ranAt": "2026-11-18T11:58:01.703468+00:00",
+      "results": [
+        {
+          "id": "h01",
+          "ok": true,
+          "ms": 0.03937099999999638,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "제설대책 2단계 발령 증회 연장운행 시행"
+          }
+        },
+        {
+          "id": "h02",
+          "ok": true,
+          "ms": 0.01464199999999527,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "오이도행 마지막 열차운행"
+          }
+        },
+        {
+          "id": "h03",
+          "ok": true,
+          "ms": 0.03976199999999874,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "2024 한ㆍ 아프리카 정상회의 관련 출근시간 연장운행"
+          }
+        },
+        {
+          "id": "h04",
+          "ok": true,
+          "ms": 0.031206999999991436,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "2~8호선",
+                "from_station": null,
+                "to_station": null,
+                "kind": "timetable",
+                "date": "2025-10-05",
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "25년도 추석명절 연휴기간 열차운행계획 조정 알림"
+          }
+        },
+        {
+          "id": "h05",
+          "ok": true,
+          "ms": 0.018442999999992993,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "오전 러시아워 30분 연장"
+          }
+        },
+        {
+          "id": "h06",
+          "ok": true,
+          "ms": 0.03430299999999942,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "초미세먼지 고농도 발령 운임면제 알림"
+          }
+        },
+        {
+          "id": "h07",
+          "ok": true,
+          "ms": 0.02744500000000094,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "오전 R/H 시간 연장 안내(07:00~09:30)"
+          }
+        },
+        {
+          "id": "h08",
+          "ok": true,
+          "ms": 0.032259999999992295,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "초미세먼지 고농도 발령 운임면제"
+          }
+        },
+        {
+          "id": "h09",
+          "ok": true,
+          "ms": 0.0060719999999958585,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "파업대비 열차운행 조정 안내"
+          }
+        },
+        {
+          "id": "h10",
+          "ok": true,
+          "ms": 0.0064399999999964486,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울교통공사 파업관련 열차운행 조정 안내"
+          }
+        },
+        {
+          "id": "h11",
+          "ok": true,
+          "ms": 0.019041999999996895,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 열차운행계획(평일) 일부 조정 알림"
+          }
+        },
+        {
+          "id": "h12",
+          "ok": true,
+          "ms": 0.015854000000009583,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "광복절 대체공휴일 8.17.(월) 휴일 열차운행계획 적용"
+          }
+        },
+        {
+          "id": "h13",
+          "ok": true,
+          "ms": 0.030126000000005315,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "2호선 이대역 안전문장애로 열차 무정차 통과중"
+          }
+        },
+        {
+          "id": "h14",
+          "ok": true,
+          "ms": 0.0046979999999974265,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "2023 제야의종 타종행사 무정차통과 종료 안내"
+          }
+        },
+        {
+          "id": "h15",
+          "ok": true,
+          "ms": 0.027610000000011237,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "4호선",
+                "from_station": "동대문",
+                "to_station": null,
+                "kind": "skip",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선 동대문역 연기발생"
+          }
+        },
+        {
+          "id": "h16",
+          "ok": true,
+          "ms": 0.004772999999999583,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "5호선 여의나루역 무정차 통과 종료(전구간 정상운행)"
+          }
+        },
+        {
+          "id": "h17",
+          "ok": true,
+          "ms": 0.004114999999998981,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 종각역 열차 무정차 통과 종료"
+          }
+        },
+        {
+          "id": "h18",
+          "ok": true,
+          "ms": 0.0037020000000081987,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선 동대문역 무정차통과 종료"
+          }
+        },
+        {
+          "id": "h19",
+          "ok": true,
+          "ms": 0.004539000000011728,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "서울시 메트로 9호선 및 공항철도 김포공항역 무정차 통과 종료(정상운행)"
+          }
+        },
+        {
+          "id": "h20",
+          "ok": true,
+          "ms": 0.015515000000007606,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "김포골드라인 환승 불가 안내"
+          }
+        },
+        {
+          "id": "h21",
+          "ok": true,
+          "ms": 0.014204999999989365,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선 남태령역 코레일 차량고장"
+          }
+        },
+        {
+          "id": "h22",
+          "ok": true,
+          "ms": 0.019459999999998923,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 상선 운행재개"
+          }
+        },
+        {
+          "id": "h23",
+          "ok": true,
+          "ms": 0.034706999999994936,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "안산선",
+                "from_station": "한대앞",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "코레일 열차 사상사고 조치완료/운행재개"
+          }
+        },
+        {
+          "id": "h24",
+          "ok": true,
+          "ms": 0.03821899999999212,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "1호선",
+                "from_station": "서울",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "1호선 하선 서울역~남영역 간 코레일 열차 사상사고는 조치완료되어 열차운행 재개"
+          }
+        },
+        {
+          "id": "h25",
+          "ok": true,
+          "ms": 0.027076000000000877,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": true,
+            "changes": [
+              {
+                "line": "8호선",
+                "from_station": "산성",
+                "to_station": null,
+                "kind": "delay",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "8호선 정상운행"
+          }
+        },
+        {
+          "id": "h26",
+          "ok": true,
+          "ms": 0.01756900000000894,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "코레일 구간 연기발생"
+          }
+        },
+        {
+          "id": "h27",
+          "ok": true,
+          "ms": 0.027659999999998797,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "장애인단체 장애인 이동권 보장 4호선 열차 시위로 열차지연"
+          }
+        },
+        {
+          "id": "h28",
+          "ok": true,
+          "ms": 0.015300999999995346,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "4호선 전구간 열차지연 운행 중, 타교통 이용 안내"
+          }
+        },
+        {
+          "id": "h29",
+          "ok": true,
+          "ms": 0.0046290000000059894,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "5호선 광화문역 무정차 통과 종료"
+          }
+        },
+        {
+          "id": "h30",
+          "ok": true,
+          "ms": 0.039854999999991425,
+          "retries": [],
+          "usage": {
+            "input": 0,
+            "output": 0,
+            "thoughts": 0,
+            "total": 0
+          },
+          "output": {
+            "affects_last_train": false,
+            "changes": [
+              {
+                "line": null,
+                "from_station": null,
+                "to_station": null,
+                "kind": "none",
+                "date": null,
+                "new_last_departure": null,
+                "delay_minutes": null
+              }
+            ],
+            "confidence": "medium",
+            "summary": "광복절 집회 무정차 통과 안내"
+          }
+        }
+      ]
+    }
+  },
+  "method": "규칙 기반(정규식·키워드·시각 파싱, LLM 없음)",
+  "rulesBuiltFrom": "sample.json 30건과 gold.json만 보고 작성",
+  "ruleCount": 23,
+  "codeLines": 154,
+  "score": {
+    "scoredBy": "notice-eval.js score()",
+    "sample": {
+      "n": 30,
+      "allCorrect": 30,
+      "allCorrectRate": 100,
+      "fields": {
+        "affects_last_train": 30,
+        "kind": 30,
+        "line": 30,
+        "date": 30,
+        "new_last_departure": 30
+      },
+      "wrong": []
+    },
+    "holdout": {
+      "n": 30,
+      "allCorrect": 20,
+      "allCorrectRate": 66.7,
+      "fields": {
+        "affects_last_train": 20,
+        "kind": 20,
+        "line": 24,
+        "date": 27,
+        "new_last_departure": 30
+      },
+      "wrong": [
+        {
+          "id": "h02",
+          "fields": [
+            "affects_last_train",
+            "kind"
+          ]
+        },
+        {
+          "id": "h09",
+          "fields": [
+            "affects_last_train",
+            "kind"
+          ]
+        },
+        {
+          "id": "h10",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "date"
+          ]
+        },
+        {
+          "id": "h11",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line",
+            "date"
+          ]
+        },
+        {
+          "id": "h12",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "date"
+          ]
+        },
+        {
+          "id": "h13",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line"
+          ]
+        },
+        {
+          "id": "h20",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line"
+          ]
+        },
+        {
+          "id": "h22",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line"
+          ]
+        },
+        {
+          "id": "h23",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line"
+          ]
+        },
+        {
+          "id": "h25",
+          "fields": [
+            "affects_last_train",
+            "kind",
+            "line"
+          ]
+        }
+      ]
+    }
+  }
+}

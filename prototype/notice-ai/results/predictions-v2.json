@@ -1,0 +1,1032 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "promptVersion": "v2",
+  "thinkingLevel": "MINIMAL",
+  "gapMs": 4000,
+  "ranAt": "2026-11-18T05:24:55.438Z",
+  "systemPrompt": "너는 서울 지하철 운행 공지를 읽고, 막차에 영향을 주는 변경 사항만 뽑는 도우미다.\n- 공지에 적힌 내용만 쓴다. 적혀 있지 않은 값은 null로 둔다.\n- kind는 extend(연장운행), early_end(조기 종료), skip(무정차), delay(지연), timetable(시간표 변경), none(막차와 무관) 중 하나다.\n- 날짜는 YYYY-MM-DD, 시각은 24시간제 HH:MM으로 쓴다.\n- 확신이 없으면 confidence를 low로 둔다.\n\n[막차에 영향이 있는지]\n- 막차 시각이 바뀌거나(연장·조기 종료·시간표 변경), 22시 이후에 일어나거나 운행 종료 때까지 이어지는 무정차·운행 중단·지연이면 affects_last_train은 true다.\n- 출퇴근 시간대 연장·증편, 22시 전에 끝나는 상황, 이미 끝난 상황(정상 운행 재개, 무정차 종료), 연장 취소·미시행 안내는 false다.\n- affects_last_train이 false면 changes에는 kind가 none이고 나머지가 모두 null인 항목 하나만 넣는다.\n\n[값 쓰는 법]\n- date: 연도까지 알 수 있을 때만 쓴다. 본문 끝의 \"MM-DD hh:mm:ss\"는 알림을 보낸 시각이고 연도가 없으므로 날짜로 쓰지 않는다. 기간에 연도가 있으면 그 날짜를 쓴다.\n- line: \"N호선\" 또는 노선 이름(예: 수인선)으로 쓰고, 여러 호선이면 \"1~8호선\"처럼 쓴다. 공지에 호선이 없으면 null. \"구분\"은 알림 종류 코드이지 호선 번호가 아니다.\n- from_station·to_station: 역 이름에서 \"역\"을 뺀다.\n- new_last_departure: 바뀐 뒤 마지막 열차 시각. \"종착역 기준 02시까지 연장\"이면 \"02:00\", \"24:46\"이면 \"00:46\". 운행 중단이 시작되는 시각(\"오늘밤 12시부터 중단\")은 막차 시각이 아니므로 null.\n- delay_minutes: 지연 분이 적혀 있을 때만 쓴다.\n\n[예시]\n입력:\n제목: 3호선 막차 연장 안내\n내용: 행사 관련 3호선 마지막 열차를 종착역 기준 01:30까지 연장 운행합니다. 11-02 18:00:00\n구분: 6\n기간: 없음 ~ 없음\n출력: {\"affects_last_train\":true,\"changes\":[{\"line\":\"3호선\",\"from_station\":null,\"to_station\":null,\"kind\":\"extend\",\"date\":null,\"new_last_departure\":\"01:30\",\"delay_minutes\":null}],\"confidence\":\"high\",\"summary\":\"3호선 마지막 열차를 종착역 기준 01:30까지 연장\"}\n\n입력:\n제목: 7호선 논현역 무정차 통과 종료\n내용: 7호선 논현역 무정차 통과는 21:40부로 종료되어 정상 운행 중입니다. 05-14 21:42:10\n구분: 5\n기간: 없음 ~ 2026-05-14T21:40:00\n출력: {\"affects_last_train\":false,\"changes\":[{\"line\":null,\"from_station\":null,\"to_station\":null,\"kind\":\"none\",\"date\":null,\"new_last_departure\":null,\"delay_minutes\":null}],\"confidence\":\"high\",\"summary\":\"7호선 논현역 무정차가 끝나 정상 운행\"}\n\n입력:\n제목: 8호선 열차 지연\n내용: 23:05경 8호선 문정역 신호 장애로 모란 방면 열차가 약 10분 지연 운행 중입니다. 03-09 23:12:40\n구분: 4\n기간: 없음 ~ 없음\n출력: {\"affects_last_train\":true,\"changes\":[{\"line\":\"8호선\",\"from_station\":\"문정\",\"to_station\":\"모란\",\"kind\":\"delay\",\"date\":null,\"new_last_departure\":null,\"delay_minutes\":10}],\"confidence\":\"high\",\"summary\":\"8호선 문정역 신호 장애로 모란 방면 약 10분 지연\"}",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "affects_last_train": {
+        "type": "boolean"
+      },
+      "changes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "line": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "from_station": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to_station": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "extend",
+                "early_end",
+                "skip",
+                "delay",
+                "timetable",
+                "none"
+              ]
+            },
+            "date": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "new_last_departure": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "delay_minutes": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "line",
+            "from_station",
+            "to_station",
+            "kind",
+            "date",
+            "new_last_departure",
+            "delay_minutes"
+          ]
+        }
+      },
+      "confidence": {
+        "type": "string",
+        "enum": [
+          "high",
+          "medium",
+          "low"
+        ]
+      },
+      "summary": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "affects_last_train",
+      "changes",
+      "confidence",
+      "summary"
+    ]
+  },
+  "results": [
+    {
+      "id": "n01",
+      "ok": true,
+      "ms": 1319,
+      "retries": [],
+      "usage": {
+        "input": 1161,
+        "output": 137,
+        "thoughts": 0,
+        "total": 1298
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1~8호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "집중호우로 인한 시민 불편 최소화를 위해 1~8호선 막차 시간 30분 연장 운행"
+      }
+    },
+    {
+      "id": "n02",
+      "ok": true,
+      "ms": 1312,
+      "retries": [],
+      "usage": {
+        "input": 1231,
+        "output": 145,
+        "thoughts": 0,
+        "total": 1376
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1~8호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": null,
+            "new_last_departure": "02:00",
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스업계 파업으로 인해 1~8호선 마지막 열차 종착역 기준 02:00까지 연장 운행"
+      }
+    },
+    {
+      "id": "n03",
+      "ok": true,
+      "ms": 2248,
+      "retries": [],
+      "usage": {
+        "input": 1204,
+        "output": 129,
+        "thoughts": 0,
+        "total": 1333
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": null,
+            "new_last_departure": "02:00",
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스 파업으로 인해 종착역 기준 02시까지 열차 운행 연장"
+      }
+    },
+    {
+      "id": "n04",
+      "ok": true,
+      "ms": 1174,
+      "retries": [],
+      "usage": {
+        "input": 1202,
+        "output": 135,
+        "thoughts": 0,
+        "total": 1337
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스 파업 대비 연장운행 계획은 파업 철회 시 취소되는 조건부 사항이므로 현재 시점에서는 막차 영향 없음"
+      }
+    },
+    {
+      "id": "n05",
+      "ok": true,
+      "ms": 4236,
+      "retries": [],
+      "usage": {
+        "input": 1346,
+        "output": 170,
+        "thoughts": 0,
+        "total": 1516
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1~8호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": "2025-12-31",
+            "new_last_departure": "02:00",
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "2025년 제야의 종 타종행사로 1~8호선 2026-01-01 02:00까지 임시열차 연장 운행"
+      }
+    },
+    {
+      "id": "n06",
+      "ok": true,
+      "ms": 2348,
+      "retries": [],
+      "usage": {
+        "input": 1254,
+        "output": 154,
+        "thoughts": 0,
+        "total": 1408
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "7호선",
+            "from_station": "자양",
+            "to_station": "도봉산",
+            "kind": "extend",
+            "date": "2026-03-20",
+            "new_last_departure": "00:46",
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "7호선 자양역 행사 관련 도봉산행 임시열차 00:46까지 연장 운행"
+      }
+    },
+    {
+      "id": "n07",
+      "ok": true,
+      "ms": 4089,
+      "retries": [],
+      "usage": {
+        "input": 1412,
+        "output": 582,
+        "thoughts": 0,
+        "total": 1994
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "수인선",
+            "from_station": "오이도",
+            "to_station": "인천",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "경의선",
+            "from_station": "문산",
+            "to_station": "서울",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "경의선",
+            "from_station": "서울",
+            "to_station": "문산",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "중앙선",
+            "from_station": "용문",
+            "to_station": "청량리",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "경춘선",
+            "from_station": "춘천",
+            "to_station": "상봉",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "4호선",
+            "from_station": "당고개",
+            "to_station": "오이도",
+            "kind": "early_end",
+            "date": "2024-10-12",
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "10월 12일 철도노조 파업으로 수인선, 경의선, 중앙선, 경춘선, 4호선 일부 막차 운휴"
+      }
+    },
+    {
+      "id": "n08",
+      "ok": true,
+      "ms": 2961,
+      "retries": [],
+      "usage": {
+        "input": 1171,
+        "output": 153,
+        "thoughts": 0,
+        "total": 1324
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "2호선",
+            "from_station": "을지로입구",
+            "to_station": "홍대입구",
+            "kind": "early_end",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "서소문 고가 철거공사로 인해 오늘밤 12시부터 2호선 을지로입구~홍대입구 구간 운행 중단"
+      }
+    },
+    {
+      "id": "n09",
+      "ok": true,
+      "ms": 1694,
+      "retries": [],
+      "usage": {
+        "input": 1187,
+        "output": 138,
+        "thoughts": 0,
+        "total": 1325
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "6호선",
+            "from_station": "이태원",
+            "to_station": null,
+            "kind": "skip",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "6호선 이태원역 23:47부터 영업종료 시까지 상/하선 무정차 통과"
+      }
+    },
+    {
+      "id": "n10",
+      "ok": true,
+      "ms": 1773,
+      "retries": [],
+      "usage": {
+        "input": 1146,
+        "output": 129,
+        "thoughts": 0,
+        "total": 1275
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "6호선",
+            "from_station": "이태원",
+            "to_station": null,
+            "kind": "skip",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "6호선 이태원역 무정차 통과를 운행 종료 시까지 시행"
+      }
+    },
+    {
+      "id": "n11",
+      "ok": true,
+      "ms": 3222,
+      "retries": [],
+      "usage": {
+        "input": 1155,
+        "output": 129,
+        "thoughts": 0,
+        "total": 1284
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1호선",
+            "from_station": "종각",
+            "to_station": null,
+            "kind": "skip",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "제야의종 타종 행사 대비 1호선 종각역 무정차 통과"
+      }
+    },
+    {
+      "id": "n12",
+      "ok": true,
+      "ms": 2146,
+      "retries": [],
+      "usage": {
+        "input": 1145,
+        "output": 134,
+        "thoughts": 0,
+        "total": 1279
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "2호선",
+            "from_station": "신대방",
+            "to_station": null,
+            "kind": "skip",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "2호선 신대방역 도림천 범람으로 내,외선 열차 무정차 통과"
+      }
+    },
+    {
+      "id": "n13",
+      "ok": true,
+      "ms": 5528,
+      "retries": [],
+      "usage": {
+        "input": 1141,
+        "output": 134,
+        "thoughts": 0,
+        "total": 1275
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "4호선",
+            "from_station": "동대문",
+            "to_station": null,
+            "kind": "skip",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "4호선 동대문역 승강장 연기 유입으로 상·하선 무정차 통과"
+      }
+    },
+    {
+      "id": "n14",
+      "ok": true,
+      "ms": 1260,
+      "retries": [],
+      "usage": {
+        "input": 1160,
+        "output": 134,
+        "thoughts": 0,
+        "total": 1294
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "8호선",
+            "from_station": "산성",
+            "to_station": "암사",
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "8호선 산성역 암사행 열차 내 응급환자 발생으로 지연 운행 중"
+      }
+    },
+    {
+      "id": "n15",
+      "ok": true,
+      "ms": 2451,
+      "retries": [],
+      "usage": {
+        "input": 1152,
+        "output": 144,
+        "thoughts": 0,
+        "total": 1296
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "5호선",
+            "from_station": "동대문역사문화공원",
+            "to_station": "방화",
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "5호선 동대문역사문화공원역 전차선 장애로 방화 방면 열차 지연 운행"
+      }
+    },
+    {
+      "id": "n16",
+      "ok": true,
+      "ms": 1322,
+      "retries": [],
+      "usage": {
+        "input": 1214,
+        "output": 131,
+        "thoughts": 0,
+        "total": 1345
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "4호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "4호선 상,하선 사상사고로 인한 지연 발생 및 오이도행 막차 안내"
+      }
+    },
+    {
+      "id": "n17",
+      "ok": true,
+      "ms": 2347,
+      "retries": [],
+      "usage": {
+        "input": 1149,
+        "output": 136,
+        "thoughts": 0,
+        "total": 1285
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "4호선",
+            "from_station": "당고개",
+            "to_station": "안산",
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "4호선 안산행 마지막 열차가 지연되어 23:21 상계역 통과 중"
+      }
+    },
+    {
+      "id": "n18",
+      "ok": true,
+      "ms": 1429,
+      "retries": [],
+      "usage": {
+        "input": 1178,
+        "output": 136,
+        "thoughts": 0,
+        "total": 1314
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1호선",
+            "from_station": "영등포",
+            "to_station": null,
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "1호선 영등포역 부근 무궁화호 탈선으로 인해 하선 열차 지연 운행 중"
+      }
+    },
+    {
+      "id": "n19",
+      "ok": true,
+      "ms": 2552,
+      "retries": [],
+      "usage": {
+        "input": 1177,
+        "output": 144,
+        "thoughts": 0,
+        "total": 1321
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "4호선",
+            "from_station": "선바위",
+            "to_station": "오이도",
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "4호선 선바위역 하선 오이도행 차량고장으로 오이도 방면 열차 운행 중단 및 지연"
+      }
+    },
+    {
+      "id": "n20",
+      "ok": true,
+      "ms": 3269,
+      "retries": [],
+      "usage": {
+        "input": 1120,
+        "output": 125,
+        "thoughts": 0,
+        "total": 1245
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "1호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "timetable",
+            "date": "2026-09-03",
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "1호선 열차시간표 업데이트"
+      }
+    },
+    {
+      "id": "n21",
+      "ok": true,
+      "ms": 3883,
+      "retries": [],
+      "usage": {
+        "input": 1343,
+        "output": 157,
+        "thoughts": 0,
+        "total": 1500
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "2~8호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "timetable",
+            "date": "2026-02-15",
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "2026년 설 연휴 기간(2.15~2.18) 2~8호선 열차운행계획 조정으로 인한 시간표 변경"
+      }
+    },
+    {
+      "id": "n22",
+      "ok": true,
+      "ms": 2144,
+      "retries": [],
+      "usage": {
+        "input": 1180,
+        "output": 120,
+        "thoughts": 0,
+        "total": 1300
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스 파업 유보에 따른 지하철 연장운행 미시행"
+      }
+    },
+    {
+      "id": "n23",
+      "ok": true,
+      "ms": 1399,
+      "retries": [],
+      "usage": {
+        "input": 1174,
+        "output": 127,
+        "thoughts": 0,
+        "total": 1301
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "1~8호선 열차 운행 시간은 평일과 동일하며 연장 운행 미실시"
+      }
+    },
+    {
+      "id": "n24",
+      "ok": true,
+      "ms": 1725,
+      "retries": [],
+      "usage": {
+        "input": 1190,
+        "output": 121,
+        "thoughts": 0,
+        "total": 1311
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스 파업 종료로 인한 연장운행 취소 및 정상 운행 안내"
+      }
+    },
+    {
+      "id": "n25",
+      "ok": true,
+      "ms": 1362,
+      "retries": [],
+      "usage": {
+        "input": 1219,
+        "output": 124,
+        "thoughts": 0,
+        "total": 1343
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "버스 파업으로 인한 출퇴근 시간대 증편 운행이며 막차 변경 사항 없음"
+      }
+    },
+    {
+      "id": "n26",
+      "ok": true,
+      "ms": 1373,
+      "retries": [],
+      "usage": {
+        "input": 1175,
+        "output": 122,
+        "thoughts": 0,
+        "total": 1297
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "대학수학능력시험을 맞아 오전 시간대 열차 증편 운행 예정"
+      }
+    },
+    {
+      "id": "n27",
+      "ok": true,
+      "ms": 2983,
+      "retries": [],
+      "usage": {
+        "input": 1163,
+        "output": 124,
+        "thoughts": 0,
+        "total": 1287
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": null,
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "5호선 여의나루역 무정차 통과가 종료되어 정상 운행함"
+      }
+    },
+    {
+      "id": "n28",
+      "ok": true,
+      "ms": 2073,
+      "retries": [],
+      "usage": {
+        "input": 1584,
+        "output": 302,
+        "thoughts": 0,
+        "total": 1886
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "2호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": "2026-03-21",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "3호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": "2026-03-21",
+            "new_last_departure": null,
+            "delay_minutes": null
+          },
+          {
+            "line": "5호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "extend",
+            "date": "2026-03-21",
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "BTS 공연 관련 2, 3, 5호선 임시열차 증회 운행(21시부터 막차까지)"
+      }
+    },
+    {
+      "id": "n29",
+      "ok": true,
+      "ms": 1457,
+      "retries": [],
+      "usage": {
+        "input": 1201,
+        "output": 144,
+        "thoughts": 0,
+        "total": 1345
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": false,
+        "changes": [
+          {
+            "line": "3호선",
+            "from_station": null,
+            "to_station": null,
+            "kind": "none",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": null
+          }
+        ],
+        "confidence": "high",
+        "summary": "3호선 압구정~수서역 간 열차운행 중지 안내 (03:42경 발생 건으로, 이미 막차 시간대 이후 상황임)"
+      }
+    },
+    {
+      "id": "n30",
+      "ok": true,
+      "ms": 1601,
+      "retries": [],
+      "usage": {
+        "input": 1159,
+        "output": 136,
+        "thoughts": 0,
+        "total": 1295
+      },
+      "finishReason": "STOP",
+      "output": {
+        "affects_last_train": true,
+        "changes": [
+          {
+            "line": "4호선",
+            "from_station": "한대앞",
+            "to_station": null,
+            "kind": "delay",
+            "date": null,
+            "new_last_departure": null,
+            "delay_minutes": 5
+          }
+        ],
+        "confidence": "high",
+        "summary": "4호선 한대앞역 사상사고 발생으로 열차 약 4~5분 지연 운행"
+      }
+    }
+  ]
+}

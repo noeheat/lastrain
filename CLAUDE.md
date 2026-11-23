@@ -31,6 +31,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - `public/sw.js`, `public/icons/`: 오프라인 캐시(`/_next/static` 캐시 우선, 페이지 네트워크 우선, `/api` 제외)
 - `tests/`: vitest (`pnpm test`)
 - `spike/`: 외부 API 검증 스크립트(TMAP·TAGO·카카오). `node --env-file=.env.local spike/...`로 실행
+- `prototype/notice-ai/`: 운행 공지 AI 해석 시제품(경진대회 제안 기능, 앱 미연결). 서울교통공사 공지를 Gemini로 해석해 정답·규칙 추출기(`baseline_rules.py`)와 비교. `README.md`·`results/notice-eval.md`
 - `docs/`: 사람이 읽는 문서. 진행 상황·남은 작업(`progress.md`), 학습 노트(`learning-notes.md`), 지난 세션 기록. 앱 코드와 무관
 
 ## 교훈 (삽질할 때마다 한 줄씩 추가)
@@ -42,3 +43,7 @@ v2부터 Next.js(App Router) + TypeScript + Tailwind, Vercel 배포. 로그인·
 - Next.js는 진행 중인 같은 캐시 대상 fetch를 하나로 합친다(`patch-fetch.js`의 pendingRevalidates). 재시도·헤지 요청을 같은 URL로 보내면 멈춘 첫 요청을 같이 기다리므로, 두 번째 시도는 `cache: 'no-store'`로 보낸다.
 - 서울 실시간 지하철 도착(swopenAPI)의 `barvlDt`(도착까지 남은 초)는 수신 시각 `recptnDt` 기준이고, 수신 시각이 몇 분 묵어 있을 때가 있다(2호선 5분). 남은 시간은 `recptnDt + barvlDt − 지금`으로 다시 센다. 실시간 키는 일반 인증키와 별도("실시간 지하철")다.
 - 스크롤에 맞춰 요소를 움직일 때(앞 카드를 제자리에 붙잡기 등) JS 스크롤 이벤트로 transform을 바꾸면 한 프레임씩 늦어 폰에서 떨린다. CSS 스크롤 연동 애니메이션(`view-timeline`/`animation-timeline`)을 쓴다.
+- 공공데이터포털 「서울교통공사_지하철알림정보」(15144070)는 포털에 적힌 `B553766/ntce`가 아니라 `/B553766/ntce/getNtceList`로 불러야 한다(포털 페이지 HTML의 Swagger 명세에 있음). 활용신청 직후엔 키가 맞아도 "등록되지 않은 서비스키"(403)가 나온다.
+- 운행 공지 본문의 시각 도장은 "MM-DD hh:mm:ss"뿐이라 연도가 없다. LLM은 여기에 연도를 지어 붙인다(Gemini Flash-Lite 30건 중 21건). 날짜가 필요하면 알림 발생 일시(`noftOcrnDt`)를 입력에 함께 준다. `prototype/notice-ai/results/notice-eval.md` 참고.
+- LLM이 스스로 매기는 confidence는 틀린 답을 거르지 못한다(Gemini Flash-Lite 운행 공지 60건 모두 high, 틀린 12건도 high). 경계 사례 표시는 규칙으로 따로 한다. 프롬프트를 오답에 맞춰 고쳤으면 처음 보는 데이터(검증 세트)로 다시 잰다.
+- 정답을 보며 만든 규칙 추출기는 측정용에서 만점이 나와도 의미가 없다(운행 공지 30/30 → 처음 보는 공지 20/30). 무관이 많은 세트에선 "모두 무관"이라고만 답해도 점수가 높으니(19/30) 영향 있는 공지만 따로 센다(규칙 3/11, AI 8/11).
