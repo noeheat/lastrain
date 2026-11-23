@@ -1,6 +1,6 @@
 # 막차 카운트다운 — 진행 상황과 남은 작업
 
-> 2026-11-12 기준. 브랜치 `v2/nextjs`(push됨, Preview 자동 배포 https://lastrain-ukck-git-v2-nextjs-noeheat.vercel.app, Vercel 로그인 필요). Production은 아직 공개 보류(15번).
+> 2026-11-23 기준. 2026-11-23 `v2/nextjs`를 `main`에 합쳐 Production(https://lastrain-ukck.vercel.app)에 공개 배포했다(15번). Preview(https://lastrain-ukck-git-v2-nextjs-noeheat.vercel.app)는 Vercel 로그인 필요.
 > 제품 정의는 `PRODUCT.md`, 디자인 체계는 `DESIGN.md`에 있다.
 > 10월 29일까지의 자세한 과정은 `session-notes.md`, 배운 점은 `learning-notes.md`에 있다.
 
@@ -9,7 +9,7 @@
 | 영역 | 상태 |
 |---|---|
 | v1 (정적 PWA, 수동 입력) | 완료. GitHub Pages 주소는 지금 **404** (아래 "배포" 참고) |
-| v2 Next.js 전환 | 완료, Vercel Preview 배포 중 (`lastrain-ukck`) |
+| v2 Next.js 전환 | 완료, 2026-11-23 Production 공개 (`lastrain-ukck`) |
 | 역 검색 → 같은 노선 막차 자동 입력 | 완료 |
 | 1~9호선 서울 시간표 (토요일·휴일 포함) | 완료, Preview에서 확인 (강남→홍대입구 토요일 23:24) |
 | 환승 경로 막차 | 완료, Preview에서 평일 확인 (신논현→잠실 00:34) |
@@ -141,10 +141,11 @@
 13-1. ~~'역'으로 끝나는 역 검색은 TAGO를 두 번 부른다~~ — 11-12 해결: TAGO 역 검색은 이름에 검색어가 **포함**된 역을 찾는다("서울" 결과 20개에 "서울역" 결과 5개가 모두 들어 있음, 서울역·강남역·하남검단산역 등 7개 확인). 그래서 '역'을 뗀 검색어로 한 번만 부르고(`tagoKeyword`), 순위는 원래 검색어와 뗀 검색어 둘 다로 매긴다(`searchTerms`·`rankStations`). '역' 하나만 넣으면 그대로 보낸다. 참고: TAGO 응답은 하루 캐시라 원래도 같은 검색어는 하루 한 번만 나갔고, 호출 제한(`rateLimit`)은 우리 API 요청 단위라 두 번으로 세지 않았다.
 14. **서비스 워커·PWA** — 11-05 Preview(HTTPS)에서 확인: 서비스 워커 등록·활성(페이지 제어 중), manifest(`application/manifest+json`)·아이콘 3개 200, `sw.js`는 `max-age=0`이라 배포하면 바로 갱신된다. 새로고침 뒤 페이지가 쓰는 `/_next` 파일 6개가 모두 캐시에 있다(빠진 1개는 구형 브라우저용 `nomodule` 폴리필).
    - 남은 것: **휴대폰에서 직접** 홈 화면 추가(iOS Safari·Android Chrome)와 비행기 모드에서 다시 열기. 브라우저 패널은 네트워크를 끊을 수 없어 확인하지 못했다.
-15. **배포 정리**
+15. ~~배포 정리~~ — 11-23 Production 공개
     - 11-05 확인: `main`은 `v2/nextjs`의 조상이라 fast-forward로 합칠 수 있다. GitHub Pages는 이미 꺼져 있다. API 키 3개는 Vercel Production에도 등록돼 있다.
     - Production(https://lastrain-ukck.vercel.app)은 로그인 없이 열리지만 `main`의 v2 1단계(API 없음)다.
-    - **11-05 결정: 기능을 더 만든 뒤 공개한다.** 공개할 때 `main`을 fast-forward해 push하면 Production이 자동 배포된다. 그 전에 Production을 숨기려면 Vercel Deployment Protection 설정(직접).
+    - 11-05 결정: 기능을 더 만든 뒤 공개한다.
+    - **11-23 공개:** `v2/nextjs`를 `main`에 fast-forward하고 push해 Production이 자동 배포됐다. 배포 뒤 역 검색 API(`/api/stations`)가 실제 결과를 돌려주는 것을 확인했다. 그 전까지 Production은 v2 1단계(API 없음)였다.
 16. **정리할 것**
     - ~~`AGENTS.md`~~ 11-05 커밋 (`next dev`가 다시 만드는 파일이라 커밋해 두는 편이 깨끗하다)
     - `CLAUDE.local.md`(커밋 안 함) "프로젝트 기록"(서비스명, 배포일, URL)은 공개할 때 채운다.
